@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Slipstream</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #1a1a1a; color: #fff; font-family: 'Inter', sans-serif; }
+  body { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 20px 12px; gap: 0; min-height: 100dvh; }
+
+  /* --- Lobby --- */
+  #lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; flex: 1; width: 100%; max-width: 360px; }
+  #lobby h1 { font-family: 'Barlow Condensed', Impact, sans-serif; font-weight: 800; font-style: italic; font-size: 52px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .lobby-btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 16px; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
+  .lobby-btn:hover { opacity: 0.85; }
+  .btn-new { background: #fff; color: #1a1a1a; }
+  .btn-join { background: #333; color: #fff; }
+  #join-form { display: none; flex-direction: column; gap: 10px; width: 100%; }
+  #join-form input { padding: 12px; border-radius: 8px; border: 1px solid #444; background: #2a2a2a; color: #fff; font-size: 16px; text-align: center; letter-spacing: 0.12em; text-transform: uppercase; width: 100%; }
+  #join-form input::placeholder { color: #666; text-transform: none; letter-spacing: 0; }
+  #join-form button { padding: 12px; border-radius: 8px; border: none; background: #fff; color: #1a1a1a; font-size: 15px; font-weight: 500; cursor: pointer; }
+  .lobby-err { color: #ff6b6b; font-size: 13px; text-align: center; min-height: 18px; }
+
+  /* --- Waiting room --- */
+  #waiting { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 20px; flex: 1; width: 100%; max-width: 360px; text-align: center; }
+  #waiting h2 { font-size: 20px; font-weight: 500; }
+  #game-code-display { font-size: 40px; font-weight: 500; letter-spacing: 0.2em; color: #fff; }
+  #waiting p { font-size: 14px; color: #888; line-height: 1.6; }
+  .copy-btn { padding: 10px 20px; border-radius: 8px; border: 1px solid #444; background: #2a2a2a; color: #fff; font-size: 14px; cursor: pointer; }
+  .copy-btn:hover { background: #333; }
+  .spinner { width: 32px; height: 32px; border: 3px solid #333; border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* --- Game --- */
+  #game { display: none; flex-direction: column; align-items: center; gap: 14px; width: 100%; }
+  .game-header { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 520px; padding: 0 4px; }
+  .player-chip { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #aaa; padding: 6px 12px; border-radius: 20px; border: 1.5px solid transparent; transition: border-color 0.2s, color 0.2s; }
+  .player-chip.active-turn { border-color: #fff; color: #fff; }
+  .player-chip .dot { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; }
+  .player-chip .dot.black { background: #2a2a2a; border: 1.5px solid #555; }
+  .player-chip .dot.white { background: #e8e8e8; border: 1.5px solid #bbb; }
+  .score { font-weight: 500; font-size: 15px; }
+  .your-tag { font-size: 11px; color: #666; margin-left: 2px; }
+
+  /* Board */
+  .board-outer { display: grid; grid-template-columns: 44px auto 44px; grid-template-rows: 44px auto 44px; position: relative; }
+  .edge-top    { grid-column: 2; grid-row: 1; display: grid; position: relative; z-index: 10; }
+  .edge-bottom { grid-column: 2; grid-row: 3; display: grid; position: relative; z-index: 10; }
+  .edge-left   { grid-column: 1; grid-row: 2; display: grid; position: relative; z-index: 10; }
+  .edge-right  { grid-column: 3; grid-row: 2; display: grid; position: relative; z-index: 10; }
+  .board-wrap  { grid-column: 2; grid-row: 2; border: 2px solid #7a5c3a; border-radius: 2px; overflow: visible; position: relative; z-index: 5; }
+  .board { display: grid; overflow: visible; }
+  .cell { display: flex; align-items: center; justify-content: center; cursor: default; position: relative; overflow: visible; }
+  .cell.light { background: #f0d9b5; }
+  .cell.dark  { background: #b58863; }
+  .cell.valid-light { background: #d4b98a; cursor: pointer; }
+  .cell.valid-dark  { background: #9e7245; cursor: pointer; }
+  .cell.valid-light::after { content: ''; position: absolute; width: 27%; height: 27%; border-radius: 50%; background: #d4b98a; border: 1.5px solid #b89a6a; pointer-events: none; }
+  .cell.valid-dark::after  { content: ''; position: absolute; width: 27%; height: 27%; border-radius: 50%; background: #9e7245; border: 1.5px solid #7a5530; pointer-events: none; }
+  .cell.has-piece { cursor: pointer; }
+  .cell.locked { pointer-events: none; }
+  .edge-cell { display: flex; align-items: center; justify-content: center; position: relative; overflow: visible; border-radius: 4px; }
+  .edge-cell.valid-edge { background: rgba(180,140,90,0.18); cursor: pointer; }
+  .edge-cell.valid-edge::after { content: ''; position: absolute; width: 28%; height: 28%; border-radius: 50%; background: rgba(150,110,60,0.25); border: 1.5px solid rgba(120,85,40,0.4); pointer-events: none; }
+
+  /* Pieces */
+  .piece-scene { transform-style: preserve-3d; position: relative; z-index: 20; }
+  .piece-scene.sliding { z-index: 100; }
+  .face { border-radius: 50%; position: absolute; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+  .face-black { background: #2a2a2a; transform: rotateY(0deg); }
+  .face-white { background: #e8e8e8; border: 1.5px solid #bbb; transform: rotateY(180deg); }
+  .piece-scene.show-black { transform: rotateY(0deg); }
+  .piece-scene.show-white { transform: rotateY(180deg); }
+  .piece-scene.flip-to-white { animation: flipToWhite 0.4s ease forwards; }
+  .piece-scene.flip-to-black { animation: flipToBlack 0.4s ease forwards; }
+  @keyframes flipToWhite { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
+  @keyframes flipToBlack { from { transform: rotateY(180deg); } to { transform: rotateY(360deg); } }
+  .piece-scene.slide-right { animation: slideRight 0.36s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+  .piece-scene.slide-left  { animation: slideLeft  0.36s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+  .piece-scene.slide-down  { animation: slideDown  0.36s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+  .piece-scene.slide-up    { animation: slideUp    0.36s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+  @keyframes slideRight { from { transform: translateX(calc(-1 * var(--cell))); } to { transform: translateX(0); } }
+  @keyframes slideLeft  { from { transform: translateX(var(--cell));  } to { transform: translateX(0); } }
+  @keyframes slideDown  { from { transform: translateY(calc(-1 * var(--cell))); } to { transform: translateY(0); } }
+  @keyframes slideUp    { from { transform: translateY(var(--cell));  } to { transform: translateY(0); } }
+
+  /* Slipstream banner */
+  .slipstream-banner { position: absolute; z-index: 300; pointer-events: none; display: flex; align-items: center; justify-content: center; opacity: 0; overflow: hidden; }
+  .slipstream-banner svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .slipstream-banner span { font-family: 'Barlow Condensed', Impact, sans-serif; font-weight: 800; font-style: italic; text-transform: uppercase; color: #fff; letter-spacing: 0.04em; line-height: 1; white-space: nowrap; text-shadow: 0 2px 8px rgba(0,0,0,0.6), 0 0 2px rgba(0,0,0,0.9); display: block; position: relative; z-index: 1; }
+  @keyframes bannerFade { 0%{opacity:0;}10%{opacity:1;}72%{opacity:1;}100%{opacity:0;} }
+  @keyframes speedLineAnim { 0%{stroke-dashoffset:400;opacity:0;}15%{opacity:0.9;}70%{opacity:0.7;}100%{stroke-dashoffset:-400;opacity:0;} }
+  .slipstream-banner.dir-right.animate { animation: bannerFade 0.9s ease forwards; }
+  .slipstream-banner.dir-right.animate span { animation: sweepLR 0.9s cubic-bezier(0.22,1,0.36,1) forwards; }
+  .slipstream-banner.dir-right.animate .sline { animation: speedLineAnim 0.9s ease forwards; }
+  @keyframes sweepLR { 0%{transform:translateX(-110%) skewX(-8deg);}18%{transform:translateX(0%) skewX(-8deg);}75%{transform:translateX(0%) skewX(-8deg);}100%{transform:translateX(110%) skewX(-8deg);} }
+  .slipstream-banner.dir-left.animate { animation: bannerFade 0.9s ease forwards; }
+  .slipstream-banner.dir-left.animate span { animation: sweepRL 0.9s cubic-bezier(0.22,1,0.36,1) forwards; }
+  .slipstream-banner.dir-left.animate .sline { animation: speedLineAnim 0.9s ease forwards; }
+  @keyframes sweepRL { 0%{transform:translateX(110%) skewX(-8deg);}18%{transform:translateX(0%) skewX(-8deg);}75%{transform:translateX(0%) skewX(-8deg);}100%{transform:translateX(-110%) skewX(-8deg);} }
+  .slipstream-banner.dir-down.animate { animation: bannerFade 0.9s ease forwards; }
+  .slipstream-banner.dir-down.animate span { animation: sweepDown 0.9s cubic-bezier(0.22,1,0.36,1) forwards; }
+  .slipstream-banner.dir-down.animate .sline { animation: speedLineAnim 0.9s ease forwards; }
+  @keyframes sweepDown { 0%{transform:rotate(-90deg) translateX(110%) skewX(-8deg);}18%{transform:rotate(-90deg) translateX(0%) skewX(-8deg);}75%{transform:rotate(-90deg) translateX(0%) skewX(-8deg);}100%{transform:rotate(-90deg) translateX(-110%) skewX(-8deg);} }
+  .slipstream-banner.dir-up.animate { animation: bannerFade 0.9s ease forwards; }
+  .slipstream-banner.dir-up.animate span { animation: sweepUp 0.9s cubic-bezier(0.22,1,0.36,1) forwards; }
+  .slipstream-banner.dir-up.animate .sline { animation: speedLineAnim 0.9s ease forwards; }
+  @keyframes sweepUp { 0%{transform:rotate(-90deg) translateX(-110%) skewX(-8deg);}18%{transform:rotate(-90deg) translateX(0%) skewX(-8deg);}75%{transform:rotate(-90deg) translateX(0%) skewX(-8deg);}100%{transform:rotate(-90deg) translateX(110%) skewX(-8deg);} }
+
+  /* Game over popup */
+  .popup-overlay { display: none; position: absolute; inset: calc(-1 * var(--edge)); z-index: 200; background: rgba(0,0,0,0.7); border-radius: 4px; align-items: center; justify-content: center; }
+  .popup-overlay.show { display: flex; }
+  .popup { background: #2a2a2a; border: 1px solid #444; border-radius: 16px; padding: 32px; display: flex; flex-direction: column; align-items: center; gap: 16px; min-width: 220px; }
+  .popup-piece { width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0; }
+  .popup-piece.black { background: #2a2a2a; border: 2px solid #555; }
+  .popup-piece.white { background: #e8e8e8; border: 2px solid #bbb; }
+  .popup-piece.tie { background: linear-gradient(135deg, #2a2a2a 50%, #e8e8e8 50%); border: 2px solid #888; }
+  .popup-title { font-size: 22px; font-weight: 500; color: #fff; margin: 0; text-align: center; }
+  .popup-sub { font-size: 14px; color: #888; margin: 0; text-align: center; }
+  .popup-btn { padding: 10px 24px; border-radius: 8px; border: 1px solid #555; background: #333; cursor: pointer; font-size: 14px; color: #fff; margin-top: 4px; }
+  .popup-btn:hover { background: #444; }
+
+  /* Status bar */
+  .status-bar { font-size: 13px; color: #666; min-height: 18px; }
+  .status-bar.your-turn { color: #a8d8a8; }
+  .status-bar.their-turn { color: #888; }
+</style>
+</head>
+<body>
+
+<!-- LOBBY -->
+<div id="lobby">
+  <h1>Slipstream</h1>
+  <button class="lobby-btn btn-new" onclick="createGame()">New game</button>
+  <button class="lobby-btn btn-join" onclick="showJoinForm()">Join game</button>
+  <div id="join-form">
+    <input id="code-input" maxlength="4" placeholder="Enter 4-letter code" oninput="this.value=this.value.toUpperCase()">
+    <button onclick="joinGame()">Join</button>
+  </div>
+  <div class="lobby-err" id="lobby-err"></div>
+</div>
+
+<!-- WAITING -->
+<div id="waiting">
+  <h2>Game created!</h2>
+  <div id="game-code-display"></div>
+  <p>Share this code with your friend.<br>They enter it on their device to join.</p>
+  <button class="copy-btn" onclick="copyCode()">Copy code</button>
+  <div class="spinner"></div>
+  <p style="font-size:13px;color:#555;">Waiting for opponent...</p>
+</div>
+
+<!-- GAME -->
+<div id="game">
+  <div class="game-header">
+    <div class="player-chip" id="chip-black">
+      <div class="dot black"></div>
+      <span class="score" id="score-black">2</span>
+      <span class="your-tag" id="tag-black"></span>
+    </div>
+    <div class="status-bar" id="status-bar">—</div>
+    <div class="player-chip" id="chip-white">
+      <div class="dot white"></div>
+      <span class="score" id="score-white">2</span>
+      <span class="your-tag" id="tag-white"></span>
+    </div>
+  </div>
+  <div style="position:relative;" id="board-container">
+    <div class="board-outer" id="board-outer">
+      <div class="edge-top"    id="edge-top"></div>
+      <div class="edge-left"   id="edge-left"></div>
+      <div class="board-wrap"><div class="board" id="board"></div></div>
+      <div class="edge-right"  id="edge-right"></div>
+      <div class="edge-bottom" id="edge-bottom"></div>
+    </div>
+    <div class="slipstream-banner" id="slipstream-banner">
+      <svg id="speed-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+      <span id="slipstream-text">SLIPSTREAM</span>
+    </div>
+    <div class="popup-overlay" id="popup-overlay">
+      <div class="popup">
+        <div class="popup-piece" id="popup-piece"></div>
+        <p class="popup-title" id="popup-title"></p>
+        <p class="popup-sub" id="popup-sub"></p>
+        <button class="popup-btn" onclick="newGameFromEnd()">New game</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getDatabase, ref, set, get, onValue, update } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDgp6VoFUtu_a8_gRq4ycnw3LRoIRczGcU",
+  authDomain: "slipstream-fa49e.firebaseapp.com",
+  databaseURL: "https://slipstream-fa49e-default-rtdb.firebaseio.com",
+  projectId: "slipstream-fa49e",
+  storageBucket: "slipstream-fa49e.firebasestorage.app",
+  messagingSenderId: "955589839151",
+  appId: "1:955589839151:web:0d2bc88bd215b7be4739da"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// ── Constants ──────────────────────────────────────────────────────────────
+const DIRS8=[[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]];
+const DIRS4=[[0,1],[0,-1],[1,0],[-1,0]];
+
+// ── State ──────────────────────────────────────────────────────────────────
+let gameCode = null;
+let myColor = null;        // 'black' | 'white'
+let currentTurn = 'black';
+let board = Array.from({length:8},()=>Array(8).fill(null));
+let animating = false;
+let gameOver = false;
+let CELL = 52;             // recalculated on render
+let unsubscribe = null;
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function randCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  return Array.from({length:4}, ()=>chars[Math.floor(Math.random()*chars.length)]).join('');
+}
+
+function freshBoard() {
+  const b = Array.from({length:8},()=>Array(8).fill(null));
+  b[3][3]='white'; b[3][4]='black';
+  b[4][3]='black'; b[4][4]='white';
+  return b;
+}
+
+function boardToFlat(b) { return b.map(r=>r.map(v=>v||'').join(',')).join('|'); }
+function flatToBoard(s) { return s.split('|').map(r=>r.split(',').map(v=>v||null)); }
+
+function serializeState() {
+  return { board: boardToFlat(board), turn: currentTurn, over: gameOver };
+}
+
+// ── Lobby ──────────────────────────────────────────────────────────────────
+window.showJoinForm = function() {
+  document.getElementById('join-form').style.display='flex';
+};
+
+window.createGame = async function() {
+  const code = randCode();
+  gameCode = code;
+  myColor = 'black';
+  board = freshBoard();
+  gameOver = false;
+  currentTurn = 'black';
+
+  await set(ref(db, `games/${code}`), {
+    board: boardToFlat(board),
+    turn: 'black',
+    over: false,
+    black: 'connected',
+    white: 'waiting'
+  });
+
+  showWaiting(code);
+  listenForOpponent(code);
+};
+
+window.joinGame = async function() {
+  const code = document.getElementById('code-input').value.trim().toUpperCase();
+  if(code.length !== 4) { setErr('Enter a 4-letter code'); return; }
+  const snap = await get(ref(db, `games/${code}`));
+  if(!snap.exists()) { setErr('Game not found'); return; }
+  const data = snap.val();
+  if(data.white === 'connected') { setErr('Game is full'); return; }
+
+  myColor = 'white';
+  gameCode = code;
+  board = flatToBoard(data.board);
+  currentTurn = data.turn;
+  gameOver = data.over;
+
+  await update(ref(db, `games/${code}`), { white: 'connected' });
+
+  startGame();
+};
+
+function setErr(msg) { document.getElementById('lobby-err').textContent = msg; }
+
+function showWaiting(code) {
+  document.getElementById('lobby').style.display='none';
+  document.getElementById('waiting').style.display='flex';
+  document.getElementById('game-code-display').textContent = code;
+}
+
+window.copyCode = function() {
+  navigator.clipboard.writeText(gameCode).catch(()=>{});
+  document.querySelector('.copy-btn').textContent = 'Copied!';
+  setTimeout(()=>document.querySelector('.copy-btn').textContent='Copy code', 2000);
+};
+
+function listenForOpponent(code) {
+  const r = ref(db, `games/${code}/white`);
+  const unsub = onValue(r, snap => {
+    if(snap.val() === 'connected') {
+      unsub();
+      startGame();
+    }
+  });
+}
+
+// ── Game start ─────────────────────────────────────────────────────────────
+function startGame() {
+  document.getElementById('lobby').style.display='none';
+  document.getElementById('waiting').style.display='none';
+  document.getElementById('game').style.display='flex';
+
+  document.getElementById('tag-black').textContent = myColor==='black' ? '(you)' : '';
+  document.getElementById('tag-white').textContent = myColor==='white' ? '(you)' : '';
+
+  calcCellSize();
+  render();
+  updateHeader();
+
+  // Listen for remote moves
+  if(unsubscribe) unsubscribe();
+  unsubscribe = onValue(ref(db, `games/${gameCode}`), snap => {
+    if(!snap.exists()) return;
+    const data = snap.val();
+    const remoteBoard = flatToBoard(data.board);
+    const remoteTurn = data.turn;
+    const remoteOver = data.over;
+
+    // Only apply if it's now our turn (meaning opponent just moved)
+    if(remoteTurn === myColor && !animating) {
+      board = remoteBoard;
+      currentTurn = remoteTurn;
+      gameOver = remoteOver;
+      render();
+      updateHeader();
+      if(gameOver) showGameOver();
+    } else if(remoteTurn !== myColor) {
+      // Still opponent's turn or initial sync
+      board = remoteBoard;
+      currentTurn = remoteTurn;
+      gameOver = remoteOver;
+      render();
+      updateHeader();
+    }
+  });
+}
+
+// ── Cell sizing ────────────────────────────────────────────────────────────
+function calcCellSize() {
+  const maxW = Math.min(window.innerWidth - 24, 480);
+  const edge = Math.floor(maxW / 10);
+  CELL = Math.floor((maxW - edge * 2) / 8);
+  document.documentElement.style.setProperty('--cell', CELL+'px');
+  document.documentElement.style.setProperty('--edge', edge+'px');
+
+  // Apply sizes
+  document.querySelector('.board').style.gridTemplateColumns = `repeat(8, ${CELL}px)`;
+  document.getElementById('edge-top').style.gridTemplateColumns = `repeat(8, ${CELL}px)`;
+  document.getElementById('edge-bottom').style.gridTemplateColumns = `repeat(8, ${CELL}px)`;
+  document.getElementById('edge-left').style.gridTemplateRows = `repeat(8, ${CELL}px)`;
+  document.getElementById('edge-right').style.gridTemplateRows = `repeat(8, ${CELL}px)`;
+  document.getElementById('board-outer').style.gridTemplateColumns = `${edge}px ${CELL*8}px ${edge}px`;
+  document.getElementById('board-outer').style.gridTemplateRows = `${edge}px ${CELL*8}px ${edge}px`;
+}
+
+// ── Game logic ─────────────────────────────────────────────────────────────
+function getContiguousBlock(axis,idx2){
+  let r,c,dr,dc;
+  if(axis==='left'){r=idx2;c=0;dr=0;dc=1;}else if(axis==='right'){r=idx2;c=7;dr=0;dc=-1;}
+  else if(axis==='top'){r=0;c=idx2;dr=1;dc=0;}else{r=7;c=idx2;dr=-1;dc=0;}
+  const block=[];let nr=r,nc=c;
+  while(nr>=0&&nr<8&&nc>=0&&nc<8&&board[nr][nc]!==null){block.push([nr,nc]);nr+=dr;nc+=dc;}
+  return block;
+}
+function preSlideFlips(axis,idx2,color){
+  const block=getContiguousBlock(axis,idx2);if(block.length===0)return[];
+  const between=[];
+  for(const[nr,nc]of block){const v=board[nr][nc];if(v===color)return between;between.push([nr,nc]);}
+  return[];
+}
+function slideHasRoom(axis,idx2){
+  const block=getContiguousBlock(axis,idx2);if(block.length===0)return false;
+  const[lr,lc]=block[block.length-1];let nr,nc;
+  if(axis==='left'){nr=lr;nc=lc+1;}else if(axis==='right'){nr=lr;nc=lc-1;}
+  else if(axis==='top'){nr=lr+1;nc=lc;}else{nr=lr-1;nc=lc;}
+  if(nr<0||nr>7||nc<0||nc>7)return false;
+  return board[nr][nc]===null;
+}
+function isValidEdgePlacement(axis,idx2,color){if(!slideHasRoom(axis,idx2))return false;return preSlideFlips(axis,idx2,color).length>0;}
+function doSlide(axis,idx2,color){
+  const block=getContiguousBlock(axis,idx2);
+  for(let i=block.length-1;i>=0;i--){
+    const[r,c]=block[i];let nr,nc;
+    if(axis==='left'){nr=r;nc=c+1;}else if(axis==='right'){nr=r;nc=c-1;}
+    else if(axis==='top'){nr=r+1;nc=c;}else{nr=r-1;nc=c;}
+    board[nr][nc]=board[r][c];board[r][c]=null;
+  }
+  let er,ec;
+  if(axis==='left'){er=idx2;ec=0;}else if(axis==='right'){er=idx2;ec=7;}
+  else if(axis==='top'){er=0;ec=idx2;}else{er=7;ec=idx2;}
+  board[er][ec]=color;
+}
+function landingPos(axis,idx2){if(axis==='left')return[idx2,0];if(axis==='right')return[idx2,7];if(axis==='top')return[0,idx2];return[7,idx2];}
+function getFlipsFrom(r,c,color){
+  const flips=[];
+  for(const[dr,dc]of DIRS8){
+    const between=[];let nr=r+dr,nc=c+dc;
+    while(nr>=0&&nr<8&&nc>=0&&nc<8){
+      const v=board[nr][nc];if(v===null)break;
+      if(v===color){for(const b of between)flips.push(b);break;}
+      between.push([nr,nc]);nr+=dr;nc+=dc;
+    }
+  }
+  return flips;
+}
+function hasOrthNeighbor(r,c){for(const[dr,dc]of DIRS4){const nr=r+dr,nc=c+dc;if(nr>=0&&nr<8&&nc>=0&&nc<8&&board[nr][nc]!==null)return true;}return false;}
+function isValidBoardPlacement(r,c,color){if(board[r][c]!==null)return false;if(!hasOrthNeighbor(r,c))return false;return getFlipsFrom(r,c,color).length>0;}
+function getValidBoardCells(color){const v=[];for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(isValidBoardPlacement(r,c,color))v.push([r,c]);return v;}
+function getValidEdgeCells(color){
+  const v=[];
+  for(let i=0;i<8;i++){
+    if(isValidEdgePlacement('left',i,color))v.push({axis:'left',idx2:i});
+    if(isValidEdgePlacement('right',i,color))v.push({axis:'right',idx2:i});
+    if(isValidEdgePlacement('top',i,color))v.push({axis:'top',idx2:i});
+    if(isValidEdgePlacement('bottom',i,color))v.push({axis:'bottom',idx2:i});
+  }
+  return v;
+}
+function getCounts(){let bc=0,wc=0;for(let r=0;r<8;r++)for(let c=0;c<8;c++){if(board[r][c]==='black')bc++;else if(board[r][c]==='white')wc++;}return{bc,wc};}
+
+function isMyTurn(){ return currentTurn === myColor; }
+
+// ── Moves ──────────────────────────────────────────────────────────────────
+function pushState() {
+  const nextTurn = currentTurn==='black'?'white':'black';
+  update(ref(db, `games/${gameCode}`), {
+    board: boardToFlat(board),
+    turn: nextTurn,
+    over: gameOver
+  });
+}
+
+function endTurn(){
+  checkGameOver();
+  if(!gameOver) {
+    currentTurn = currentTurn==='black'?'white':'black';
+  }
+  pushState();
+  animating=false;
+  render();
+  updateHeader();
+}
+
+function checkGameOver(){
+  const bm=getValidBoardCells('black').length+getValidEdgeCells('black').length;
+  const wm=getValidBoardCells('white').length+getValidEdgeCells('white').length;
+  if(bm===0&&wm===0){ gameOver=true; return; }
+}
+
+function placeBoard(r,c){
+  if(animating||gameOver||!isMyTurn())return;
+  if(!isValidBoardPlacement(r,c,currentTurn))return;
+  board[r][c]=currentTurn;
+  const flips=getFlipsFrom(r,c,currentTurn);
+  animating=true;render();
+  applyFlips(flips,currentTurn,()=>endTurn());
+}
+
+function placeEdge(axis,idx2){
+  if(animating||gameOver||!isMyTurn())return;
+  if(!isValidEdgePlacement(axis,idx2,currentTurn))return;
+  const blockLen=getContiguousBlock(axis,idx2).length;
+  animating=true;
+  doSlide(axis,idx2,currentTurn);
+  render(true);
+  fireSlipstreamBanner(axis,idx2,blockLen);
+  const sc=slideAnimClass(axis);
+  const[er,ec]=landingPos(axis,idx2);
+  const moved=[[er,ec],...getContiguousBlock(axis,idx2)]; // already slid, recalc
+  // animate pieces
+  (['left','right'].includes(axis)?
+    Array.from({length:8},(_,c2)=>[idx2,c2]):
+    Array.from({length:8},(_,r2)=>[r2,axis==='top'||axis==='bottom'?idx2:idx2])
+  );
+  // just animate the landing zone row/col
+  const movedCells = [];
+  if(axis==='left'||axis==='right'){for(let c2=0;c2<8;c2++)if(board[idx2][c2])movedCells.push([idx2,c2]);}
+  else{for(let r2=0;r2<8;r2++)if(board[r2][idx2])movedCells.push([r2,idx2]);}
+  movedCells.forEach(([r2,c2])=>{
+    const cell=document.getElementById('board').children[r2*8+c2];
+    const scene=cell&&cell.querySelector('.piece-scene');
+    if(!scene)return;
+    scene.classList.add('sliding');
+    scene.classList.remove('slide-right','slide-left','slide-down','slide-up');
+    void scene.offsetWidth;scene.classList.add(sc);
+  });
+  setTimeout(()=>{
+    document.querySelectorAll('.piece-scene.sliding').forEach(s=>{
+      s.classList.remove('sliding','slide-right','slide-left','slide-down','slide-up');
+    });
+    const[lr,lc]=landingPos(axis,idx2);
+    const postFlips=getFlipsFrom(lr,lc,currentTurn);
+    render();
+    applyFlips(postFlips,currentTurn,()=>endTurn());
+  },400);
+}
+
+function applyFlips(flips,color,onDone){
+  if(flips.length===0){onDone();return;}
+  let done=0;
+  flips.forEach(([fr,fc],i2)=>{
+    setTimeout(()=>{
+      board[fr][fc]=color;
+      const cell=document.getElementById('board').children[fr*8+fc];
+      const scene=cell&&cell.querySelector('.piece-scene');
+      if(!scene){done++;if(done===flips.length)onDone();return;}
+      const ac=color==='white'?'flip-to-white':'flip-to-black';
+      scene.classList.remove('show-black','show-white','flip-to-white','flip-to-black');
+      void scene.offsetWidth;scene.classList.add(ac);
+      scene.addEventListener('animationend',()=>{
+        scene.classList.remove(ac);scene.classList.add('show-'+color);
+        done++;if(done===flips.length)onDone();
+      },{once:true});
+    },i2*80);
+  });
+}
+
+function slideAnimClass(axis){if(axis==='left')return'slide-right';if(axis==='right')return'slide-left';if(axis==='top')return'slide-down';return'slide-up';}
+
+// ── Banner ─────────────────────────────────────────────────────────────────
+function axisToDirClass(axis){if(axis==='left')return'dir-right';if(axis==='right')return'dir-left';if(axis==='top')return'dir-down';return'dir-up';}
+
+function buildSpeedLines(isHoriz,W,H){
+  const svg=document.getElementById('speed-svg');
+  svg.innerHTML='';svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const NS='http://www.w3.org/2000/svg';
+  const delays=[0,0.04,0.08,0.02,0.06,0.1,0.03,0.07,0.01,0.05];
+  const opacities=[0.55,0.35,0.65,0.45,0.30,0.60,0.40,0.50,0.28,0.42];
+  const widths=[2.5,1.2,3.0,1.8,1.0,2.0,1.5,2.8,1.0,1.6];
+  for(let i=0;i<10;i++){
+    const line=document.createElementNS(NS,'line');
+    const len=(isHoriz?W:H)*(0.4+Math.random()*0.5);
+    const off=(isHoriz?W:H)*Math.random()*0.3;
+    const cross=((isHoriz?H:W)/11)*(i+1);
+    if(isHoriz){line.setAttribute('x1',off);line.setAttribute('y1',cross);line.setAttribute('x2',off+len);line.setAttribute('y2',cross);}
+    else{line.setAttribute('x1',cross);line.setAttribute('y1',off);line.setAttribute('x2',cross);line.setAttribute('y2',off+len);}
+    line.setAttribute('stroke',`rgba(255,255,255,${opacities[i]})`);
+    line.setAttribute('stroke-width',widths[i]);
+    line.setAttribute('stroke-dasharray',len);
+    line.setAttribute('stroke-dashoffset',len+50);
+    line.style.animationDelay=delays[i]+'s';
+    line.classList.add('sline');
+    svg.appendChild(line);
+  }
+}
+
+function fireSlipstreamBanner(axis,idx2,blockLen){
+  const banner=document.getElementById('slipstream-banner');
+  const textEl=document.getElementById('slipstream-text');
+  const isHoriz=axis==='left'||axis==='right';
+  const edge=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--edge'))||44;
+  let left,top,width,height,fontSize;
+  if(isHoriz){top=edge+idx2*CELL;height=CELL;width=(blockLen+1)*CELL;left=axis==='left'?edge:edge+(8-blockLen-1)*CELL;fontSize=Math.round(height*0.58);}
+  else{left=edge+idx2*CELL;width=CELL;height=(blockLen+1)*CELL;top=axis==='top'?edge:edge+(8-blockLen-1)*CELL;fontSize=Math.round(width*0.58);}
+  banner.style.left=left+'px';banner.style.top=top+'px';
+  banner.style.width=width+'px';banner.style.height=height+'px';
+  textEl.style.fontSize=fontSize+'px';
+  buildSpeedLines(isHoriz,width,height);
+  banner.classList.remove('dir-right','dir-left','dir-down','dir-up','animate');
+  banner.classList.add(axisToDirClass(axis));
+  void banner.offsetWidth;
+  banner.classList.add('animate');
+  banner.addEventListener('animationend',()=>banner.classList.remove('animate'),{once:true});
+}
+
+// ── UI ─────────────────────────────────────────────────────────────────────
+function updateHeader(){
+  const{bc,wc}=getCounts();
+  document.getElementById('score-black').textContent=bc;
+  document.getElementById('score-white').textContent=wc;
+  document.getElementById('chip-black').classList.toggle('active-turn',currentTurn==='black');
+  document.getElementById('chip-white').classList.toggle('active-turn',currentTurn==='white');
+  const sb=document.getElementById('status-bar');
+  if(gameOver){sb.textContent='Game over';sb.className='status-bar';}
+  else if(isMyTurn()){sb.textContent='Your turn';sb.className='status-bar your-turn';}
+  else{sb.textContent="Opponent's turn";sb.className='status-bar their-turn';}
+}
+
+function showGameOver(){
+  const{bc,wc}=getCounts();
+  document.getElementById('popup-overlay').classList.add('show');
+  const piece=document.getElementById('popup-piece');
+  const title=document.getElementById('popup-title');
+  const sub=document.getElementById('popup-sub');
+  if(bc===wc){piece.className='popup-piece tie';title.textContent="It's a tie!";sub.textContent=`${bc} — ${wc}`;}
+  else if(bc>wc){piece.className='popup-piece black';title.textContent='Black wins!';sub.textContent=`${bc} — ${wc}`;}
+  else{piece.className='popup-piece white';title.textContent='White wins!';sub.textContent=`${wc} — ${bc}`;}
+}
+
+window.newGameFromEnd = async function(){
+  if(myColor==='black'){
+    board=freshBoard();currentTurn='black';gameOver=false;
+    await set(ref(db,`games/${gameCode}`),{board:boardToFlat(board),turn:'black',over:false,black:'connected',white:'connected'});
+  }
+  document.getElementById('popup-overlay').classList.remove('show');
+  render();updateHeader();
+};
+
+function makePiece(color){
+  const scene=document.createElement('div');
+  scene.className='piece-scene show-'+color;
+  scene.style.width=Math.round(CELL*0.77)+'px';
+  scene.style.height=Math.round(CELL*0.77)+'px';
+  const front=document.createElement('div');front.className='face face-black';
+  front.style.width=Math.round(CELL*0.77)+'px';front.style.height=Math.round(CELL*0.77)+'px';
+  const back=document.createElement('div');back.className='face face-white';
+  back.style.width=Math.round(CELL*0.77)+'px';back.style.height=Math.round(CELL*0.77)+'px';
+  scene.appendChild(front);scene.appendChild(back);
+  return scene;
+}
+
+function render(suppressValid){
+  const myTurn = isMyTurn();
+  const validBoard=(animating||suppressValid||gameOver||!myTurn)?[]:getValidBoardCells(currentTurn);
+  const validEdge=(animating||suppressValid||gameOver||!myTurn)?[]:getValidEdgeCells(currentTurn);
+  const validBoardSet=new Set(validBoard.map(([r,c])=>r*8+c));
+  const vLeft=new Set(validEdge.filter(e=>e.axis==='left').map(e=>e.idx2));
+  const vRight=new Set(validEdge.filter(e=>e.axis==='right').map(e=>e.idx2));
+  const vTop=new Set(validEdge.filter(e=>e.axis==='top').map(e=>e.idx2));
+  const vBottom=new Set(validEdge.filter(e=>e.axis==='bottom').map(e=>e.idx2));
+
+  const boardEl=document.getElementById('board');boardEl.innerHTML='';
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+    const v=board[r][c];const isLight=(r+c)%2===0;const cell=document.createElement('div');
+    cell.className='cell';cell.style.width=CELL+'px';cell.style.height=CELL+'px';
+    if(v){
+      cell.classList.add('has-piece',isLight?'light':'dark');
+      if(animating)cell.classList.add('locked');
+      else cell.onclick=()=>placeBoard(r,c);
+      cell.appendChild(makePiece(v));
+    } else if(validBoardSet.has(r*8+c)){
+      cell.classList.add(isLight?'valid-light':'valid-dark');
+      cell.onclick=()=>placeBoard(r,c);
+    } else{cell.classList.add(isLight?'light':'dark');}
+    boardEl.appendChild(cell);
+  }
+
+  const edge=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--edge'))||44;
+  const renderEdge=(id,arr,validSet,axis)=>{
+    const el=document.getElementById(id);el.innerHTML='';
+    arr.forEach((v,i)=>{
+      const cell=document.createElement('div');cell.className='edge-cell';
+      const isRow=axis==='left'||axis==='right';
+      cell.style.width=(isRow?edge:CELL)+'px';cell.style.height=(isRow?CELL:edge)+'px';
+      if(validSet.has(i)){cell.classList.add('valid-edge');cell.onclick=()=>placeEdge(axis,i);}
+      if(v)cell.appendChild(makePiece(v));
+      el.appendChild(cell);
+    });
+  };
+  renderEdge('edge-top',Array(8).fill(null),vTop,'top');
+  renderEdge('edge-bottom',Array(8).fill(null),vBottom,'bottom');
+  renderEdge('edge-left',Array(8).fill(null),vLeft,'left');
+  renderEdge('edge-right',Array(8).fill(null),vRight,'right');
+
+  updateHeader();
+  if(gameOver) showGameOver();
+}
+
+// expose globals
+window.createGame = window.createGame;
+window.joinGame = window.joinGame;
+</script>
+</body>
+</html>
