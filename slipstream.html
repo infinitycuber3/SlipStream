@@ -9,18 +9,15 @@
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
   html,body{height:100%;background:#1a1a1a;color:#fff;font-family:'Inter',sans-serif;}
   body{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:20px 12px;min-height:100dvh;}
-
   #lobby{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;flex:1;width:100%;max-width:360px;}
   #lobby h1{font-family:'Barlow Condensed',Impact,sans-serif;font-weight:800;font-style:italic;font-size:52px;letter-spacing:.04em;text-transform:uppercase;}
   .lobby-btn{width:100%;padding:14px;border:none;border-radius:10px;font-size:16px;font-weight:500;cursor:pointer;}
-  .btn-new{background:#fff;color:#1a1a1a;}
-  .btn-join{background:#333;color:#fff;}
+  .btn-new{background:#fff;color:#1a1a1a;}.btn-join{background:#333;color:#fff;}
   #join-form{display:none;flex-direction:column;gap:10px;width:100%;}
   #join-form input{padding:12px;border-radius:8px;border:1px solid #444;background:#2a2a2a;color:#fff;font-size:16px;text-align:center;letter-spacing:.12em;text-transform:uppercase;width:100%;}
   #join-form input::placeholder{color:#666;text-transform:none;letter-spacing:0;}
   #join-form button{padding:12px;border-radius:8px;border:none;background:#fff;color:#1a1a1a;font-size:15px;font-weight:500;cursor:pointer;}
   .lobby-err{color:#ff6b6b;font-size:13px;text-align:center;min-height:18px;}
-
   #waiting{display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;flex:1;width:100%;max-width:360px;text-align:center;}
   #waiting h2{font-size:20px;font-weight:500;}
   #game-code-display{font-size:40px;font-weight:500;letter-spacing:.2em;}
@@ -28,7 +25,6 @@
   .copy-btn{padding:10px 20px;border-radius:8px;border:1px solid #444;background:#2a2a2a;color:#fff;font-size:14px;cursor:pointer;}
   .spinner{width:32px;height:32px;border:3px solid #333;border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg);}}
-
   #game{display:none;flex-direction:column;align-items:center;gap:14px;width:100%;}
   .game-header{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:520px;padding:0 4px;}
   .player-chip{display:flex;align-items:center;gap:8px;font-size:14px;color:#aaa;padding:6px 12px;border-radius:20px;border:1.5px solid transparent;transition:border-color .2s,color .2s;}
@@ -38,7 +34,6 @@
   .player-chip .dot.white{background:#e8e8e8;border:1.5px solid #bbb;}
   .score{font-weight:500;font-size:15px;}
   .your-tag{font-size:11px;color:#666;margin-left:2px;}
-
   .board-outer{display:grid;grid-template-columns:44px auto 44px;grid-template-rows:44px auto 44px;position:relative;}
   .edge-top{grid-column:2;grid-row:1;display:grid;position:relative;z-index:10;}
   .edge-bottom{grid-column:2;grid-row:3;display:grid;position:relative;z-index:10;}
@@ -56,7 +51,6 @@
   .edge-cell{display:flex;align-items:center;justify-content:center;position:relative;overflow:visible;border-radius:4px;}
   .edge-cell.valid-edge{background:rgba(180,140,90,.18);cursor:pointer;}
   .edge-cell.valid-edge::after{content:'';position:absolute;width:28%;height:28%;border-radius:50%;background:rgba(150,110,60,.25);border:1.5px solid rgba(120,85,40,.4);pointer-events:none;}
-
   .piece-scene{transform-style:preserve-3d;position:relative;z-index:20;}
   .piece-scene.sliding{z-index:100;}
   .face{border-radius:50%;position:absolute;backface-visibility:hidden;-webkit-backface-visibility:hidden;}
@@ -75,7 +69,6 @@
   @keyframes slideLeft{from{transform:translateX(var(--cell));}to{transform:translateX(0);}}
   @keyframes slideDown{from{transform:translateY(calc(-1*var(--cell)));}to{transform:translateY(0);}}
   @keyframes slideUp{from{transform:translateY(var(--cell));}to{transform:translateY(0);}}
-
   .slipstream-banner{position:absolute;z-index:300;pointer-events:none;display:flex;align-items:center;justify-content:center;opacity:0;overflow:hidden;}
   .slipstream-banner svg{position:absolute;inset:0;width:100%;height:100%;}
   .slipstream-banner span{font-family:'Barlow Condensed',Impact,sans-serif;font-weight:800;font-style:italic;text-transform:uppercase;color:#fff;letter-spacing:.04em;line-height:1;white-space:nowrap;text-shadow:0 2px 8px rgba(0,0,0,.6),0 0 2px rgba(0,0,0,.9);display:block;position:relative;z-index:1;}
@@ -97,7 +90,6 @@
   .slipstream-banner.dir-up.animate span{animation:sweepUp .9s cubic-bezier(.22,1,.36,1) forwards;}
   .slipstream-banner.dir-up.animate .sline{animation:speedLineAnim .9s ease forwards;}
   @keyframes sweepUp{0%{transform:rotate(-90deg) translateX(-110%) skewX(-8deg);}18%{transform:rotate(-90deg) translateX(0%) skewX(-8deg);}75%{transform:rotate(-90deg) translateX(0%) skewX(-8deg);}100%{transform:rotate(-90deg) translateX(110%) skewX(-8deg);}}
-
   .popup-overlay{display:none;position:absolute;inset:calc(-1*var(--edge,44px));z-index:200;background:rgba(0,0,0,.7);border-radius:4px;align-items:center;justify-content:center;}
   .popup-overlay.show{display:flex;}
   .popup{background:#2a2a2a;border:1px solid #444;border-radius:16px;padding:32px;display:flex;flex-direction:column;align-items:center;gap:16px;min-width:220px;}
@@ -108,11 +100,9 @@
   .popup-title{font-size:22px;font-weight:500;color:#fff;margin:0;text-align:center;}
   .popup-sub{font-size:14px;color:#888;margin:0;text-align:center;}
   .popup-btn{padding:10px 24px;border-radius:8px;border:1px solid #555;background:#333;cursor:pointer;font-size:14px;color:#fff;margin-top:4px;}
-  .popup-btn:hover{background:#444;}
-
   .status-bar{font-size:13px;color:#666;min-height:18px;display:flex;align-items:center;gap:6px;}
-  .status-bar.your-turn{color:#a8d8a8;}
-  .status-bar.their-turn{color:#888;}
+  .status-bar.your-turn{color:#a8d8a8;}.status-bar.their-turn{color:#888;}
+  .status-bar.replaying{color:#d4a843;}
   .pulse-dot{width:7px;height:7px;border-radius:50%;background:#888;display:inline-block;animation:pulse 1.2s ease-in-out infinite;}
   @keyframes pulse{0%,100%{opacity:.3;transform:scale(.8);}50%{opacity:1;transform:scale(1.15);}}
 </style>
@@ -201,7 +191,6 @@ let board=freshBoard();
 let animating=false, gameOver=false;
 let CELL=52, EDGE=44;
 let stopListening=null;
-// Track the last state we pushed so we can ignore our own echo from Firebase
 let lastPushedBoard=null;
 
 function freshBoard(){
@@ -211,6 +200,8 @@ function freshBoard(){
 }
 function boardToFlat(b){return b.map(r=>r.map(v=>v||'').join(',')).join('|');}
 function flatToBoard(s){return s.split('|').map(r=>r.split(',').map(v=>v||null));}
+function flipsToStr(flips){return flips.map(([r,c])=>r+','+c).join(';');}
+function strToFlips(s){if(!s)return[];return s.split(';').map(p=>p.split(',').map(Number));}
 function randCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ';return Array.from({length:4},()=>c[Math.floor(Math.random()*c.length)]).join('');}
 
 // ── Lobby ──────────────────────────────────────────────────────────────────
@@ -221,12 +212,12 @@ window.createGame=async function(){
   board=freshBoard(); currentTurn='black'; gameOver=false;
   await set(ref(db,`games/${gameCode}`),{
     board:boardToFlat(board), turn:'black', over:false,
-    black:'connected', white:'waiting'
+    black:'connected', white:'waiting',
+    lastMove:null
   });
   document.getElementById('lobby').style.display='none';
   document.getElementById('waiting').style.display='flex';
   document.getElementById('game-code-display').textContent=gameCode;
-  // wait for white to join
   const unsub=onValue(ref(db,`games/${gameCode}/white`),snap=>{
     if(snap.val()==='connected'){unsub();startGame();}
   });
@@ -246,7 +237,6 @@ window.joinGame=async function(){
 };
 
 function setErr(msg){document.getElementById('lobby-err').textContent=msg;}
-
 window.copyCode=function(){
   navigator.clipboard.writeText(gameCode).catch(()=>{});
   document.querySelector('.copy-btn').textContent='Copied!';
@@ -267,13 +257,83 @@ function startGame(){
     if(!snap.exists()||animating) return;
     const data=snap.val();
     const flat=data.board;
-    // Skip if this is our own push echoing back
     if(flat===lastPushedBoard) return;
-    board=flatToBoard(flat);
-    currentTurn=data.turn;
-    gameOver=data.over;
-    render(); updateHeader();
-    if(gameOver) showGameOver();
+
+    // It's our turn — replay opponent's move first, then hand control
+    const lastMove=data.lastMove;
+    const prevBoardFlat=lastMove&&lastMove.prevBoard;
+    const flips=lastMove?strToFlips(lastMove.flips):[];
+    const color=lastMove?lastMove.color:null;
+
+    if(lastMove && color && color!==myColor && prevBoardFlat) {
+      // Replay: start from board before opponent's move
+      board=flatToBoard(prevBoardFlat);
+      currentTurn=color;
+      gameOver=false;
+      animating=true;
+      updateStatusBar('replaying');
+      render(true);
+
+      if(lastMove.type==='board') {
+        // Place piece, then animate flips
+        const[pr,pc]=[lastMove.r, lastMove.c];
+        board[pr][pc]=color;
+        render(true);
+        applyFlips(flips, color, ()=>{
+          // Done replaying — apply final state
+          board=flatToBoard(flat);
+          currentTurn=data.turn;
+          gameOver=data.over;
+          animating=false;
+          lastPushedBoard=null;
+          render(); updateHeader();
+          if(gameOver) showGameOver();
+        });
+      } else if(lastMove.type==='slipstream') {
+        // Replay slipstream slide + flips
+        const blockLen=lastMove.blockLen;
+        const axis=lastMove.axis;
+        const idx2=lastMove.idx2;
+        doSlide(axis,idx2,color);
+        render(true);
+        fireSlipstreamBanner(axis,idx2,blockLen);
+        const sc=slideAnimClass(axis);
+        const movedCells=[];
+        if(axis==='left'||axis==='right'){for(let c2=0;c2<8;c2++)if(board[idx2][c2])movedCells.push([idx2,c2]);}
+        else{for(let r2=0;r2<8;r2++)if(board[r2][idx2])movedCells.push([r2,idx2]);}
+        movedCells.forEach(([r2,c2])=>{
+          const cell=document.getElementById('board').children[r2*8+c2];
+          const scene=cell&&cell.querySelector('.piece-scene');
+          if(!scene)return;
+          scene.classList.add('sliding');
+          scene.classList.remove('slide-right','slide-left','slide-down','slide-up');
+          void scene.offsetWidth; scene.classList.add(sc);
+        });
+        setTimeout(()=>{
+          document.querySelectorAll('.piece-scene.sliding').forEach(s=>{
+            s.classList.remove('sliding','slide-right','slide-left','slide-down','slide-up');
+          });
+          render();
+          applyFlips(flips, color, ()=>{
+            board=flatToBoard(flat);
+            currentTurn=data.turn;
+            gameOver=data.over;
+            animating=false;
+            lastPushedBoard=null;
+            render(); updateHeader();
+            if(gameOver) showGameOver();
+          });
+        },400);
+      }
+    } else {
+      // Our own echo or initial state — just apply
+      board=flatToBoard(flat);
+      currentTurn=data.turn;
+      gameOver=data.over;
+      lastPushedBoard=null;
+      render(); updateHeader();
+      if(gameOver) showGameOver();
+    }
   });
 }
 
@@ -345,8 +405,21 @@ function getFlipsFrom(r,c,color){
   }
   return flips;
 }
-function hasOrthNeighbor(r,c){for(const[dr,dc]of DIRS4){const nr=r+dr,nc=c+dc;if(nr>=0&&nr<8&&nc>=0&&nc<8&&board[nr][nc])return true;}return false;}
-function isValidBoard(r,c,color){return!board[r][c]&&hasOrthNeighbor(r,c)&&getFlipsFrom(r,c,color).length>0;}
+
+// Adjacency: board placements use all 8 dirs; slipstreams use DIRS4 (handled separately)
+function hasAnyNeighbor(r,c){
+  for(const[dr,dc]of DIRS8){const nr=r+dr,nc=c+dc;if(nr>=0&&nr<8&&nc>=0&&nc<8&&board[nr][nc])return true;}
+  return false;
+}
+function hasOrthNeighbor(r,c){
+  for(const[dr,dc]of DIRS4){const nr=r+dr,nc=c+dc;if(nr>=0&&nr<8&&nc>=0&&nc<8&&board[nr][nc])return true;}
+  return false;
+}
+
+function isValidBoard(r,c,color){
+  // Diagonal adjacency allowed for board placements
+  return !board[r][c] && hasAnyNeighbor(r,c) && getFlipsFrom(r,c,color).length>0;
+}
 function validBoardCells(color){const v=[];for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(isValidBoard(r,c,color))v.push([r,c]);return v;}
 function validEdgeCells(color){
   const v=[];
@@ -360,52 +433,52 @@ function validEdgeCells(color){
 }
 function getCounts(){let bc=0,wc=0;for(let r=0;r<8;r++)for(let c=0;c<8;c++){if(board[r][c]==='black')bc++;else if(board[r][c]==='white')wc++;}return{bc,wc};}
 function isMyTurn(){return currentTurn===myColor;}
+function slideAnimClass(axis){if(axis==='left')return'slide-right';if(axis==='right')return'slide-left';if(axis==='top')return'slide-down';return'slide-up';}
 
-// ── Push to Firebase ───────────────────────────────────────────────────────
-function pushState(nextTurn, over){
-  const flat=boardToFlat(board);
-  lastPushedBoard=flat;
-  update(ref(db,`games/${gameCode}`),{board:flat,turn:nextTurn,over:!!over});
-}
-
-// ── End of turn ────────────────────────────────────────────────────────────
-function endTurn(){
-  // Check if either player has moves
+// ── Push & end turn ────────────────────────────────────────────────────────
+function endTurn(lastMove){
   const bm=validBoardCells('black').length+validEdgeCells('black').length;
   const wm=validBoardCells('white').length+validEdgeCells('white').length;
   const next=currentTurn==='black'?'white':'black';
-  let over=false;
-  if(bm===0&&wm===0){over=true;gameOver=true;}
-  else if((next==='black'&&bm===0)||(next==='white'&&wm===0)){
-    // skip — next player has no moves, go again
-    currentTurn=currentTurn; // stays same
-    animating=false; render(); updateHeader();
-    pushState(currentTurn, false);
-    return;
-  }
-  currentTurn=over?currentTurn:next;
+  let over=false, nextTurn=next;
+  if(bm===0&&wm===0){over=true;nextTurn=currentTurn;}
+  else if((next==='black'&&bm===0)||(next==='white'&&wm===0)){nextTurn=currentTurn;}
+
+  const flat=boardToFlat(board);
+  lastPushedBoard=flat;
+  gameOver=over;
+  currentTurn=nextTurn;
   animating=false;
   render(); updateHeader();
-  pushState(currentTurn, over);
+  update(ref(db,`games/${gameCode}`),{board:flat,turn:nextTurn,over:over,lastMove:lastMove});
   if(over) showGameOver();
 }
 
-// ── Placing pieces ─────────────────────────────────────────────────────────
 function placeBoard(r,c){
   if(animating||gameOver||!isMyTurn()) return;
   if(!isValidBoard(r,c,currentTurn)) return;
+  const prevBoard=boardToFlat(board);
   board[r][c]=currentTurn;
   const flips=getFlipsFrom(r,c,currentTurn);
+  const color=currentTurn;
   animating=true; render();
-  applyFlips(flips,currentTurn,()=>endTurn());
+  applyFlips(flips, color, ()=>{
+    endTurn({
+      type:'board', r, c, color,
+      flips:flipsToStr(flips),
+      prevBoard
+    });
+  });
 }
 
 function placeEdge(axis,idx2){
   if(animating||gameOver||!isMyTurn()) return;
   if(!isValidEdge(axis,idx2,currentTurn)) return;
+  const prevBoard=boardToFlat(board);
   const blockLen=getContiguousBlock(axis,idx2).length;
+  const color=currentTurn;
   animating=true;
-  doSlide(axis,idx2,currentTurn);
+  doSlide(axis,idx2,color);
   render(true);
   fireSlipstreamBanner(axis,idx2,blockLen);
   const sc=slideAnimClass(axis);
@@ -425,9 +498,15 @@ function placeEdge(axis,idx2){
       s.classList.remove('sliding','slide-right','slide-left','slide-down','slide-up');
     });
     const[lr,lc]=landingPos(axis,idx2);
-    const postFlips=getFlipsFrom(lr,lc,currentTurn);
+    const postFlips=getFlipsFrom(lr,lc,color);
     render();
-    applyFlips(postFlips,currentTurn,()=>endTurn());
+    applyFlips(postFlips, color, ()=>{
+      endTurn({
+        type:'slipstream', axis, idx2, blockLen, color,
+        flips:flipsToStr(postFlips),
+        prevBoard
+      });
+    });
   },400);
 }
 
@@ -451,11 +530,8 @@ function applyFlips(flips,color,onDone){
   });
 }
 
-function slideAnimClass(axis){if(axis==='left')return'slide-right';if(axis==='right')return'slide-left';if(axis==='top')return'slide-down';return'slide-up';}
-
 // ── Banner ─────────────────────────────────────────────────────────────────
 function axisToDirClass(axis){if(axis==='left')return'dir-right';if(axis==='right')return'dir-left';if(axis==='top')return'dir-down';return'dir-up';}
-
 function buildSpeedLines(isHoriz,W,H){
   const svg=document.getElementById('speed-svg');
   svg.innerHTML=''; svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
@@ -479,7 +555,6 @@ function buildSpeedLines(isHoriz,W,H){
     svg.appendChild(line);
   }
 }
-
 function fireSlipstreamBanner(axis,idx2,blockLen){
   const banner=document.getElementById('slipstream-banner');
   const textEl=document.getElementById('slipstream-text');
@@ -499,18 +574,21 @@ function fireSlipstreamBanner(axis,idx2,blockLen){
 }
 
 // ── UI ─────────────────────────────────────────────────────────────────────
+function updateStatusBar(mode){
+  const sb=document.getElementById('status-bar');
+  if(mode==='replaying'){sb.innerHTML='Replaying...';sb.className='status-bar replaying';return;}
+  if(gameOver){sb.innerHTML='Game over';sb.className='status-bar';return;}
+  if(isMyTurn()){sb.innerHTML='Your turn';sb.className='status-bar your-turn';}
+  else{sb.innerHTML='<span class="pulse-dot"></span> Waiting...';sb.className='status-bar their-turn';}
+}
 function updateHeader(){
   const{bc,wc}=getCounts();
   document.getElementById('score-black').textContent=bc;
   document.getElementById('score-white').textContent=wc;
   document.getElementById('chip-black').classList.toggle('active-turn',currentTurn==='black');
   document.getElementById('chip-white').classList.toggle('active-turn',currentTurn==='white');
-  const sb=document.getElementById('status-bar');
-  if(gameOver){sb.innerHTML='Game over';sb.className='status-bar';}
-  else if(isMyTurn()){sb.innerHTML='Your turn';sb.className='status-bar your-turn';}
-  else{sb.innerHTML='<span class="pulse-dot"></span> Waiting...';sb.className='status-bar their-turn';}
+  updateStatusBar();
 }
-
 function showGameOver(){
   const{bc,wc}=getCounts();
   document.getElementById('popup-overlay').classList.add('show');
@@ -521,28 +599,25 @@ function showGameOver(){
   else if(bc>wc){piece.className='popup-piece black';title.textContent='Black wins!';sub.textContent=`${bc} — ${wc}`;}
   else{piece.className='popup-piece white';title.textContent='White wins!';sub.textContent=`${wc} — ${bc}`;}
 }
-
 window.newGameFromEnd=async function(){
   if(myColor==='black'){
     board=freshBoard(); currentTurn='black'; gameOver=false;
     const flat=boardToFlat(board); lastPushedBoard=flat;
-    await set(ref(db,`games/${gameCode}`),{board:flat,turn:'black',over:false,black:'connected',white:'connected'});
+    await set(ref(db,`games/${gameCode}`),{board:flat,turn:'black',over:false,black:'connected',white:'connected',lastMove:null});
   }
   document.getElementById('popup-overlay').classList.remove('show');
   render(); updateHeader();
 };
-
 function makePiece(color){
   const s=Math.round(CELL*.77);
   const scene=document.createElement('div');
   scene.className='piece-scene show-'+color;
   scene.style.cssText=`width:${s}px;height:${s}px;`;
-  const front=document.createElement('div'); front.className='face face-black'; front.style.cssText=`width:${s}px;height:${s}px;`;
-  const back=document.createElement('div'); back.className='face face-white'; back.style.cssText=`width:${s}px;height:${s}px;`;
-  scene.appendChild(front); scene.appendChild(back);
+  const front=document.createElement('div');front.className='face face-black';front.style.cssText=`width:${s}px;height:${s}px;`;
+  const back=document.createElement('div');back.className='face face-white';back.style.cssText=`width:${s}px;height:${s}px;`;
+  scene.appendChild(front);scene.appendChild(back);
   return scene;
 }
-
 function render(suppressValid){
   const myTurn=isMyTurn();
   const vBoard=(animating||suppressValid||gameOver||!myTurn)?[]:validBoardCells(currentTurn);
@@ -552,32 +627,28 @@ function render(suppressValid){
   const vRight=new Set(vEdge.filter(e=>e.axis==='right').map(e=>e.idx2));
   const vTop=new Set(vEdge.filter(e=>e.axis==='top').map(e=>e.idx2));
   const vBottom=new Set(vEdge.filter(e=>e.axis==='bottom').map(e=>e.idx2));
-
-  const boardEl=document.getElementById('board'); boardEl.innerHTML='';
+  const boardEl=document.getElementById('board');boardEl.innerHTML='';
   for(let r=0;r<8;r++)for(let c=0;c<8;c++){
-    const v=board[r][c]; const isLight=(r+c)%2===0;
+    const v=board[r][c];const isLight=(r+c)%2===0;
     const cell=document.createElement('div');
-    cell.className='cell'; cell.style.width=CELL+'px'; cell.style.height=CELL+'px';
+    cell.className='cell';cell.style.width=CELL+'px';cell.style.height=CELL+'px';
     if(v){
       cell.classList.add('has-piece',isLight?'light':'dark');
-      if(animating) cell.classList.add('locked');
+      if(animating)cell.classList.add('locked');
       else cell.onclick=()=>placeBoard(r,c);
       cell.appendChild(makePiece(v));
     } else if(vBoardSet.has(r*8+c)){
       cell.classList.add(isLight?'valid-light':'valid-dark');
       cell.onclick=()=>placeBoard(r,c);
-    } else {
-      cell.classList.add(isLight?'light':'dark');
-    }
+    } else{cell.classList.add(isLight?'light':'dark');}
     boardEl.appendChild(cell);
   }
-
   const renderEdge=(id,validSet,axis)=>{
-    const el=document.getElementById(id); el.innerHTML='';
+    const el=document.getElementById(id);el.innerHTML='';
     const isRow=axis==='left'||axis==='right';
     for(let i=0;i<8;i++){
-      const cell=document.createElement('div'); cell.className='edge-cell';
-      cell.style.width=(isRow?EDGE:CELL)+'px'; cell.style.height=(isRow?CELL:EDGE)+'px';
+      const cell=document.createElement('div');cell.className='edge-cell';
+      cell.style.width=(isRow?EDGE:CELL)+'px';cell.style.height=(isRow?CELL:EDGE)+'px';
       if(validSet.has(i)){cell.classList.add('valid-edge');cell.onclick=()=>placeEdge(axis,i);}
       el.appendChild(cell);
     }
