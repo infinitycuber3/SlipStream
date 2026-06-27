@@ -102,7 +102,6 @@
   .popup-btn{padding:10px 24px;border-radius:8px;border:1px solid #555;background:#333;cursor:pointer;font-size:14px;color:#fff;margin-top:4px;}
   .status-bar{font-size:13px;color:#666;min-height:18px;display:flex;align-items:center;gap:6px;}
   .status-bar.your-turn{color:#a8d8a8;}.status-bar.their-turn{color:#888;}
-  .status-bar.replaying{color:#d4a843;}
   .pulse-dot{width:7px;height:7px;border-radius:50%;background:#888;display:inline-block;animation:pulse 1.2s ease-in-out infinite;}
   @keyframes pulse{0%,100%{opacity:.3;transform:scale(.8);}50%{opacity:1;transform:scale(1.15);}}
 </style>
@@ -191,7 +190,8 @@ let board=freshBoard();
 let animating=false, gameOver=false;
 let CELL=52, EDGE=44;
 let stopListening=null;
-let lastPushedBoard=null;
+// seq: increments each push. We ignore Firebase updates whose seq we pushed ourselves.
+let mySeq=0;
 
 function freshBoard(){
   const b=Array.from({length:8},()=>Array(8).fill(null));
@@ -200,8 +200,8 @@ function freshBoard(){
 }
 function boardToFlat(b){return b.map(r=>r.map(v=>v||'').join(',')).join('|');}
 function flatToBoard(s){return s.split('|').map(r=>r.split(',').map(v=>v||null));}
-function flipsToStr(flips){return flips.map(([r,c])=>r+','+c).join(';');}
-function strToFlips(s){if(!s)return[];return s.split(';').map(p=>p.split(',').map(Number));}
+function flipsToStr(f){return f.map(([r,c])=>r+','+c).join(';');}
+function strToFlips(s){if(!s||s==='')return[];return s.split(';').filter(Boolean).map(p=>p.split(',').map(Number));}
 function randCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ';return Array.from({length:4},()=>c[Math.floor(Math.random()*c.length)]).join('');}
 
 // ── Lobby ──────────────────────────────────────────────────────────────────
@@ -209,11 +209,10 @@ window.showJoinForm=function(){document.getElementById('join-form').style.displa
 
 window.createGame=async function(){
   gameCode=randCode(); myColor='black';
-  board=freshBoard(); currentTurn='black'; gameOver=false;
+  board=freshBoard(); currentTurn='black'; gameOver=false; mySeq=0;
   await set(ref(db,`games/${gameCode}`),{
-    board:boardToFlat(board), turn:'black', over:false,
-    black:'connected', white:'waiting',
-    lastMove:null
+    board:boardToFlat(board), turn:'black', over:false, seq:0,
+    action:null, black:'connected', white:'waiting'
   });
   document.getElementById('lobby').style.display='none';
   document.getElementById('waiting').style.display='flex';
@@ -232,6 +231,7 @@ window.joinGame=async function(){
   if(data.white==='connected'){setErr('Game is full');return;}
   myColor='white'; gameCode=code;
   board=flatToBoard(data.board); currentTurn=data.turn; gameOver=data.over;
+  mySeq=data.seq||0;
   await update(ref(db,`games/${code}`),{white:'connected'});
   startGame();
 };
@@ -254,85 +254,76 @@ function startGame(){
 
   if(stopListening) stopListening();
   stopListening=onValue(ref(db,`games/${gameCode}`),snap=>{
-    if(!snap.exists()||animating) return;
+    if(!snap.exists()) return;
     const data=snap.val();
-    const flat=data.board;
-    if(flat===lastPushedBoard) return;
+    const inSeq=data.seq||0;
 
-    // It's our turn — replay opponent's move first, then hand control
-    const lastMove=data.lastMove;
-    const prevBoardFlat=lastMove&&lastMove.prevBoard;
-    const flips=lastMove?strToFlips(lastMove.flips):[];
-    const color=lastMove?lastMove.color:null;
+    // If this is our own push, skip
+    if(inSeq===mySeq) return;
 
-    if(lastMove && color && color!==myColor && prevBoardFlat) {
-      // Replay: start from board before opponent's move
-      board=flatToBoard(prevBoardFlat);
-      currentTurn=color;
-      gameOver=false;
-      animating=true;
-      updateStatusBar('replaying');
+    // If we're already animating an opponent move, skip
+    if(animating) return;
+
+    const action=data.action;
+    if(!action) return;
+
+    // Animate opponent's move
+    animating=true;
+    updateHeader();
+
+    if(action.type==='board'){
+      // Place piece on our board then animate flips
+      board=flatToBoard(action.boardBefore);
       render(true);
-
-      if(lastMove.type==='board') {
-        // Place piece, then animate flips
-        const[pr,pc]=[lastMove.r, lastMove.c];
-        board[pr][pc]=color;
-        render(true);
-        applyFlips(flips, color, ()=>{
-          // Done replaying — apply final state
-          board=flatToBoard(flat);
+      board[action.r][action.c]=action.color;
+      render(true);
+      const flips=strToFlips(action.flips);
+      applyFlips(flips, action.color, ()=>{
+        // Now apply final state
+        board=flatToBoard(data.board);
+        currentTurn=data.turn;
+        gameOver=data.over;
+        animating=false;
+        mySeq=inSeq;
+        render(); updateHeader();
+        if(gameOver) showGameOver();
+      });
+    } else if(action.type==='slipstream'){
+      board=flatToBoard(action.boardBefore);
+      render(true);
+      // Replay the slide
+      doSlide(action.axis, action.idx2, action.color);
+      render(true);
+      fireSlipstreamBanner(action.axis, action.idx2, action.blockLen);
+      const sc=slideAnimClass(action.axis);
+      const movedCells=[];
+      const ax=action.axis;
+      if(ax==='left'||ax==='right'){for(let c2=0;c2<8;c2++)if(board[action.idx2][c2])movedCells.push([action.idx2,c2]);}
+      else{for(let r2=0;r2<8;r2++)if(board[r2][action.idx2])movedCells.push([r2,action.idx2]);}
+      movedCells.forEach(([r2,c2])=>{
+        const cell=document.getElementById('board').children[r2*8+c2];
+        const scene=cell&&cell.querySelector('.piece-scene');
+        if(!scene)return;
+        scene.classList.add('sliding');
+        scene.classList.remove('slide-right','slide-left','slide-down','slide-up');
+        void scene.offsetWidth; scene.classList.add(sc);
+      });
+      setTimeout(()=>{
+        document.querySelectorAll('.piece-scene.sliding').forEach(s=>{
+          s.classList.remove('sliding','slide-right','slide-left','slide-down','slide-up');
+        });
+        render();
+        const flips=strToFlips(action.flips);
+        applyFlips(flips, action.color, ()=>{
+          board=flatToBoard(data.board);
           currentTurn=data.turn;
           gameOver=data.over;
           animating=false;
-          lastPushedBoard=null;
+          mySeq=inSeq;
           render(); updateHeader();
           if(gameOver) showGameOver();
         });
-      } else if(lastMove.type==='slipstream') {
-        // Replay slipstream slide + flips
-        const blockLen=lastMove.blockLen;
-        const axis=lastMove.axis;
-        const idx2=lastMove.idx2;
-        doSlide(axis,idx2,color);
-        render(true);
-        fireSlipstreamBanner(axis,idx2,blockLen);
-        const sc=slideAnimClass(axis);
-        const movedCells=[];
-        if(axis==='left'||axis==='right'){for(let c2=0;c2<8;c2++)if(board[idx2][c2])movedCells.push([idx2,c2]);}
-        else{for(let r2=0;r2<8;r2++)if(board[r2][idx2])movedCells.push([r2,idx2]);}
-        movedCells.forEach(([r2,c2])=>{
-          const cell=document.getElementById('board').children[r2*8+c2];
-          const scene=cell&&cell.querySelector('.piece-scene');
-          if(!scene)return;
-          scene.classList.add('sliding');
-          scene.classList.remove('slide-right','slide-left','slide-down','slide-up');
-          void scene.offsetWidth; scene.classList.add(sc);
-        });
-        setTimeout(()=>{
-          document.querySelectorAll('.piece-scene.sliding').forEach(s=>{
-            s.classList.remove('sliding','slide-right','slide-left','slide-down','slide-up');
-          });
-          render();
-          applyFlips(flips, color, ()=>{
-            board=flatToBoard(flat);
-            currentTurn=data.turn;
-            gameOver=data.over;
-            animating=false;
-            lastPushedBoard=null;
-            render(); updateHeader();
-            if(gameOver) showGameOver();
-          });
-        },400);
-      }
-    } else {
-      // Our own echo or initial state — just apply
-      board=flatToBoard(flat);
-      currentTurn=data.turn;
-      gameOver=data.over;
-      lastPushedBoard=null;
-      render(); updateHeader();
-      if(gameOver) showGameOver();
+      },400);
     }
   });
 }
@@ -405,21 +396,11 @@ function getFlipsFrom(r,c,color){
   }
   return flips;
 }
-
-// Adjacency: board placements use all 8 dirs; slipstreams use DIRS4 (handled separately)
 function hasAnyNeighbor(r,c){
   for(const[dr,dc]of DIRS8){const nr=r+dr,nc=c+dc;if(nr>=0&&nr<8&&nc>=0&&nc<8&&board[nr][nc])return true;}
   return false;
 }
-function hasOrthNeighbor(r,c){
-  for(const[dr,dc]of DIRS4){const nr=r+dr,nc=c+dc;if(nr>=0&&nr<8&&nc>=0&&nc<8&&board[nr][nc])return true;}
-  return false;
-}
-
-function isValidBoard(r,c,color){
-  // Diagonal adjacency allowed for board placements
-  return !board[r][c] && hasAnyNeighbor(r,c) && getFlipsFrom(r,c,color).length>0;
-}
+function isValidBoard(r,c,color){return!board[r][c]&&hasAnyNeighbor(r,c)&&getFlipsFrom(r,c,color).length>0;}
 function validBoardCells(color){const v=[];for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(isValidBoard(r,c,color))v.push([r,c]);return v;}
 function validEdgeCells(color){
   const v=[];
@@ -435,8 +416,8 @@ function getCounts(){let bc=0,wc=0;for(let r=0;r<8;r++)for(let c=0;c<8;c++){if(b
 function isMyTurn(){return currentTurn===myColor;}
 function slideAnimClass(axis){if(axis==='left')return'slide-right';if(axis==='right')return'slide-left';if(axis==='top')return'slide-down';return'slide-up';}
 
-// ── Push & end turn ────────────────────────────────────────────────────────
-function endTurn(lastMove){
+// ── End turn: push final state ─────────────────────────────────────────────
+function endTurn(action){
   const bm=validBoardCells('black').length+validEdgeCells('black').length;
   const wm=validBoardCells('white').length+validEdgeCells('white').length;
   const next=currentTurn==='black'?'white':'black';
@@ -444,37 +425,41 @@ function endTurn(lastMove){
   if(bm===0&&wm===0){over=true;nextTurn=currentTurn;}
   else if((next==='black'&&bm===0)||(next==='white'&&wm===0)){nextTurn=currentTurn;}
 
-  const flat=boardToFlat(board);
-  lastPushedBoard=flat;
   gameOver=over;
   currentTurn=nextTurn;
   animating=false;
+  mySeq=mySeq+1;
+
+  update(ref(db,`games/${gameCode}`),{
+    board:boardToFlat(board),
+    turn:nextTurn,
+    over:over,
+    seq:mySeq,
+    action:action
+  });
+
   render(); updateHeader();
-  update(ref(db,`games/${gameCode}`),{board:flat,turn:nextTurn,over:over,lastMove:lastMove});
   if(over) showGameOver();
 }
 
+// ── Place moves ────────────────────────────────────────────────────────────
 function placeBoard(r,c){
   if(animating||gameOver||!isMyTurn()) return;
   if(!isValidBoard(r,c,currentTurn)) return;
-  const prevBoard=boardToFlat(board);
-  board[r][c]=currentTurn;
-  const flips=getFlipsFrom(r,c,currentTurn);
+  const boardBefore=boardToFlat(board);
   const color=currentTurn;
+  board[r][c]=color;
+  const flips=getFlipsFrom(r,c,color);
   animating=true; render();
   applyFlips(flips, color, ()=>{
-    endTurn({
-      type:'board', r, c, color,
-      flips:flipsToStr(flips),
-      prevBoard
-    });
+    endTurn({type:'board', r, c, color, flips:flipsToStr(flips), boardBefore});
   });
 }
 
 function placeEdge(axis,idx2){
   if(animating||gameOver||!isMyTurn()) return;
   if(!isValidEdge(axis,idx2,currentTurn)) return;
-  const prevBoard=boardToFlat(board);
+  const boardBefore=boardToFlat(board);
   const blockLen=getContiguousBlock(axis,idx2).length;
   const color=currentTurn;
   animating=true;
@@ -501,11 +486,7 @@ function placeEdge(axis,idx2){
     const postFlips=getFlipsFrom(lr,lc,color);
     render();
     applyFlips(postFlips, color, ()=>{
-      endTurn({
-        type:'slipstream', axis, idx2, blockLen, color,
-        flips:flipsToStr(postFlips),
-        prevBoard
-      });
+      endTurn({type:'slipstream', axis, idx2, blockLen, color, flips:flipsToStr(postFlips), boardBefore});
     });
   },400);
 }
@@ -574,20 +555,17 @@ function fireSlipstreamBanner(axis,idx2,blockLen){
 }
 
 // ── UI ─────────────────────────────────────────────────────────────────────
-function updateStatusBar(mode){
-  const sb=document.getElementById('status-bar');
-  if(mode==='replaying'){sb.innerHTML='Replaying...';sb.className='status-bar replaying';return;}
-  if(gameOver){sb.innerHTML='Game over';sb.className='status-bar';return;}
-  if(isMyTurn()){sb.innerHTML='Your turn';sb.className='status-bar your-turn';}
-  else{sb.innerHTML='<span class="pulse-dot"></span> Waiting...';sb.className='status-bar their-turn';}
-}
 function updateHeader(){
   const{bc,wc}=getCounts();
   document.getElementById('score-black').textContent=bc;
   document.getElementById('score-white').textContent=wc;
   document.getElementById('chip-black').classList.toggle('active-turn',currentTurn==='black');
   document.getElementById('chip-white').classList.toggle('active-turn',currentTurn==='white');
-  updateStatusBar();
+  const sb=document.getElementById('status-bar');
+  if(gameOver){sb.innerHTML='Game over';sb.className='status-bar';}
+  else if(animating&&!isMyTurn()){sb.innerHTML='<span class="pulse-dot"></span> Opponent moving...';sb.className='status-bar their-turn';}
+  else if(isMyTurn()){sb.innerHTML='Your turn';sb.className='status-bar your-turn';}
+  else{sb.innerHTML='<span class="pulse-dot"></span> Waiting...';sb.className='status-bar their-turn';}
 }
 function showGameOver(){
   const{bc,wc}=getCounts();
@@ -601,9 +579,8 @@ function showGameOver(){
 }
 window.newGameFromEnd=async function(){
   if(myColor==='black'){
-    board=freshBoard(); currentTurn='black'; gameOver=false;
-    const flat=boardToFlat(board); lastPushedBoard=flat;
-    await set(ref(db,`games/${gameCode}`),{board:flat,turn:'black',over:false,black:'connected',white:'connected',lastMove:null});
+    board=freshBoard(); currentTurn='black'; gameOver=false; mySeq=0;
+    await set(ref(db,`games/${gameCode}`),{board:boardToFlat(board),turn:'black',over:false,seq:0,action:null,black:'connected',white:'connected'});
   }
   document.getElementById('popup-overlay').classList.remove('show');
   render(); updateHeader();
