@@ -717,7 +717,7 @@ function handleGameOver(){
   else if(winner===myColor){piece.className='popup-piece '+myColor;title.textContent='You win! 🎉';}
   else{piece.className='popup-piece '+winner;title.textContent='You lose.';}
   document.getElementById('popup-score').textContent=`${bc} — ${wc}`;
-  document.getElementById('popup-record').textContent=`Session: ${record.wins}W ${record.losses}L ${record.ties}T`;
+  document.getElementById('popup-record').textContent=`Session: ${record.wins}W ${record.losses}L${record.ties>0?' '+record.ties+'T':''}`;
   document.getElementById('replay-btn').disabled=false;
   document.getElementById('replay-status').textContent='';
   document.getElementById('popup-hints-toggle').checked=myHints;
@@ -812,7 +812,11 @@ function fireSlipstreamBanner(axis,idx2,blockLen){
 }
 
 // ── UI ────────────────────────────────────────────────────────────────────────
-function updateRecord(){document.getElementById('record-bar').textContent=`${record.wins}W — ${record.losses}L — ${record.ties}T`;}
+function updateRecord(){
+  const r=record;
+  const txt=r.ties>0?`${r.wins}W — ${r.losses}L — ${r.ties}T`:`${r.wins}W — ${r.losses}L`;
+  document.getElementById('record-bar').textContent=txt;
+}
 function updateHeader(){
   const{bc,wc}=getCounts();
   document.getElementById('score-black').textContent=bc;document.getElementById('score-white').textContent=wc;
