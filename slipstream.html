@@ -34,6 +34,7 @@
   .player-chip .dot.white{background:#e8e8e8;border:1.5px solid #bbb;}
   .score{font-weight:500;font-size:15px;}
   .your-tag{font-size:11px;color:#666;margin-left:2px;}
+  .record-bar{font-size:12px;color:#555;letter-spacing:.02em;}
   .board-outer{display:grid;grid-template-columns:44px auto 44px;grid-template-rows:44px auto 44px;position:relative;}
   .edge-top{grid-column:2;grid-row:1;display:grid;position:relative;z-index:10;}
   .edge-bottom{grid-column:2;grid-row:3;display:grid;position:relative;z-index:10;}
@@ -90,16 +91,27 @@
   .slipstream-banner.dir-up.animate span{animation:sweepUp .9s cubic-bezier(.22,1,.36,1) forwards;}
   .slipstream-banner.dir-up.animate .sline{animation:speedLineAnim .9s ease forwards;}
   @keyframes sweepUp{0%{transform:rotate(-90deg) translateX(-110%) skewX(-8deg);}18%{transform:rotate(-90deg) translateX(0%) skewX(-8deg);}75%{transform:rotate(-90deg) translateX(0%) skewX(-8deg);}100%{transform:rotate(-90deg) translateX(110%) skewX(-8deg);}}
-  .popup-overlay{display:none;position:absolute;inset:calc(-1*var(--edge,44px));z-index:200;background:rgba(0,0,0,.7);border-radius:4px;align-items:center;justify-content:center;}
+
+  /* Popup */
+  .popup-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.75);align-items:center;justify-content:center;}
   .popup-overlay.show{display:flex;}
-  .popup{background:#2a2a2a;border:1px solid #444;border-radius:16px;padding:32px;display:flex;flex-direction:column;align-items:center;gap:16px;min-width:220px;}
-  .popup-piece{width:56px;height:56px;border-radius:50%;flex-shrink:0;}
+  .popup{background:#2a2a2a;border:1px solid #444;border-radius:20px;padding:32px 28px;display:flex;flex-direction:column;align-items:center;gap:14px;min-width:240px;max-width:300px;width:90%;position:relative;overflow:hidden;}
+  .popup-piece{width:60px;height:60px;border-radius:50%;flex-shrink:0;}
   .popup-piece.black{background:#2a2a2a;border:2px solid #555;}
   .popup-piece.white{background:#e8e8e8;border:2px solid #bbb;}
   .popup-piece.tie{background:linear-gradient(135deg,#2a2a2a 50%,#e8e8e8 50%);border:2px solid #888;}
-  .popup-title{font-size:22px;font-weight:500;color:#fff;margin:0;text-align:center;}
-  .popup-sub{font-size:14px;color:#888;margin:0;text-align:center;}
-  .popup-btn{padding:10px 24px;border-radius:8px;border:1px solid #555;background:#333;cursor:pointer;font-size:14px;color:#fff;margin-top:4px;}
+  .popup-title{font-size:24px;font-weight:600;color:#fff;margin:0;text-align:center;}
+  .popup-score{font-size:14px;color:#888;margin:0;text-align:center;}
+  .popup-record{font-size:13px;color:#666;text-align:center;}
+  .replay-section{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;margin-top:4px;}
+  .replay-btn{width:100%;padding:12px;border-radius:10px;border:none;background:#fff;color:#1a1a1a;font-size:15px;font-weight:600;cursor:pointer;transition:opacity .15s;}
+  .replay-btn:hover{opacity:.9;}
+  .replay-btn:disabled{opacity:.4;cursor:default;}
+  .replay-status{font-size:12px;color:#666;text-align:center;min-height:16px;}
+
+  /* Confetti canvas */
+  #confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:199;}
+
   .status-bar{font-size:13px;color:#666;min-height:18px;display:flex;align-items:center;gap:6px;}
   .status-bar.your-turn{color:#a8d8a8;}.status-bar.their-turn{color:#888;}
   .pulse-dot{width:7px;height:7px;border-radius:50%;background:#888;display:inline-block;animation:pulse 1.2s ease-in-out infinite;}
@@ -107,6 +119,8 @@
 </style>
 </head>
 <body>
+
+<canvas id="confetti-canvas"></canvas>
 
 <div id="lobby">
   <h1>Slipstream</h1>
@@ -142,6 +156,7 @@
       <span class="your-tag" id="tag-white"></span>
     </div>
   </div>
+  <div class="record-bar" id="record-bar"></div>
   <div style="position:relative;" id="board-container">
     <div class="board-outer" id="board-outer">
       <div class="edge-top" id="edge-top"></div>
@@ -154,13 +169,19 @@
       <svg id="speed-svg" xmlns="http://www.w3.org/2000/svg"></svg>
       <span id="slipstream-text">SLIPSTREAM</span>
     </div>
-    <div class="popup-overlay" id="popup-overlay">
-      <div class="popup">
-        <div class="popup-piece" id="popup-piece"></div>
-        <p class="popup-title" id="popup-title"></p>
-        <p class="popup-sub" id="popup-sub"></p>
-        <button class="popup-btn" onclick="newGameFromEnd()">New game</button>
-      </div>
+  </div>
+</div>
+
+<!-- Game over popup (outside board container so it can be fixed) -->
+<div class="popup-overlay" id="popup-overlay">
+  <div class="popup">
+    <div class="popup-piece" id="popup-piece"></div>
+    <p class="popup-title" id="popup-title"></p>
+    <p class="popup-score" id="popup-score"></p>
+    <p class="popup-record" id="popup-record"></p>
+    <div class="replay-section">
+      <button class="replay-btn" id="replay-btn" onclick="requestReplay()">Rematch</button>
+      <div class="replay-status" id="replay-status"></div>
     </div>
   </div>
 </div>
@@ -190,9 +211,65 @@ let board=freshBoard();
 let animating=false, gameOver=false;
 let CELL=52, EDGE=44;
 let stopListening=null;
-// seq: increments each push. We ignore Firebase updates whose seq we pushed ourselves.
 let mySeq=0;
 
+// Session record: wins, losses, ties for myColor
+let record={wins:0, losses:0, ties:0};
+
+// ── Confetti ───────────────────────────────────────────────────────────────
+const canvas=document.getElementById('confetti-canvas');
+const ctx=canvas.getContext('2d');
+let confettiParticles=[];
+let confettiAnim=null;
+
+function startConfetti(){
+  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+  confettiParticles=[];
+  const colors=['#f94144','#f3722c','#f8961e','#f9c74f','#90be6d','#43aa8b','#577590','#e8e8e8'];
+  for(let i=0;i<180;i++){
+    confettiParticles.push({
+      x:Math.random()*canvas.width,
+      y:-10-Math.random()*200,
+      w:6+Math.random()*8,
+      h:4+Math.random()*6,
+      color:colors[Math.floor(Math.random()*colors.length)],
+      rot:Math.random()*Math.PI*2,
+      rotSpeed:(Math.random()-.5)*.15,
+      vx:(Math.random()-.5)*3,
+      vy:2+Math.random()*3,
+      alpha:1
+    });
+  }
+  if(confettiAnim) cancelAnimationFrame(confettiAnim);
+  drawConfetti();
+}
+
+function drawConfetti(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  let alive=false;
+  confettiParticles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy; p.rot+=p.rotSpeed;
+    if(p.y>canvas.height+20){p.alpha=0;}
+    else{alive=true;}
+    ctx.save();
+    ctx.globalAlpha=p.alpha;
+    ctx.translate(p.x,p.y);
+    ctx.rotate(p.rot);
+    ctx.fillStyle=p.color;
+    ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+    ctx.restore();
+  });
+  if(alive) confettiAnim=requestAnimationFrame(drawConfetti);
+  else ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+
+function stopConfetti(){
+  if(confettiAnim){cancelAnimationFrame(confettiAnim);confettiAnim=null;}
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  confettiParticles=[];
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
 function freshBoard(){
   const b=Array.from({length:8},()=>Array(8).fill(null));
   b[3][3]='white';b[3][4]='black';b[4][3]='black';b[4][4]='white';
@@ -210,9 +287,11 @@ window.showJoinForm=function(){document.getElementById('join-form').style.displa
 window.createGame=async function(){
   gameCode=randCode(); myColor='black';
   board=freshBoard(); currentTurn='black'; gameOver=false; mySeq=0;
+  record={wins:0,losses:0,ties:0};
   await set(ref(db,`games/${gameCode}`),{
     board:boardToFlat(board), turn:'black', over:false, seq:0,
-    action:null, black:'connected', white:'waiting'
+    action:null, black:'connected', white:'waiting',
+    rematch:null
   });
   document.getElementById('lobby').style.display='none';
   document.getElementById('waiting').style.display='flex';
@@ -232,6 +311,7 @@ window.joinGame=async function(){
   myColor='white'; gameCode=code;
   board=flatToBoard(data.board); currentTurn=data.turn; gameOver=data.over;
   mySeq=data.seq||0;
+  record={wins:0,losses:0,ties:0};
   await update(ref(db,`games/${code}`),{white:'connected'});
   startGame();
 };
@@ -250,7 +330,7 @@ function startGame(){
   document.getElementById('game').style.display='flex';
   document.getElementById('tag-black').textContent=myColor==='black'?'(you)':'';
   document.getElementById('tag-white').textContent=myColor==='white'?'(you)':'';
-  calcCellSize(); render(); updateHeader();
+  calcCellSize(); render(); updateHeader(); updateRecord();
 
   if(stopListening) stopListening();
   stopListening=onValue(ref(db,`games/${gameCode}`),snap=>{
@@ -258,43 +338,60 @@ function startGame(){
     const data=snap.val();
     const inSeq=data.seq||0;
 
-    // If this is our own push, skip
+    // Handle rematch confirmation
+    if(data.rematch){
+      const rm=data.rematch;
+      const myReady=rm[myColor]==='ready';
+      const oppColor=myColor==='black'?'white':'black';
+      const oppReady=rm[oppColor]==='ready';
+      updateRematchUI(myReady, oppReady);
+      if(myReady&&oppReady){
+        // Both confirmed — start new game
+        stopConfetti();
+        document.getElementById('popup-overlay').classList.remove('show');
+        board=freshBoard(); currentTurn='black'; gameOver=false;
+        animating=false;
+        if(myColor==='black'){
+          mySeq=mySeq+1;
+          update(ref(db,`games/${gameCode}`),{
+            board:boardToFlat(board),turn:'black',over:false,
+            seq:mySeq,action:null,rematch:null
+          });
+        }
+        render(); updateHeader(); updateRecord();
+        return;
+      }
+    }
+
     if(inSeq===mySeq) return;
-
-    // If we're already animating an opponent move, skip
     if(animating) return;
-
     const action=data.action;
     if(!action) return;
 
-    // Animate opponent's move
     animating=true;
     updateHeader();
 
     if(action.type==='board'){
-      // Place piece on our board then animate flips
       board=flatToBoard(action.boardBefore);
       render(true);
       board[action.r][action.c]=action.color;
       render(true);
       const flips=strToFlips(action.flips);
-      applyFlips(flips, action.color, ()=>{
-        // Now apply final state
+      applyFlips(flips,action.color,()=>{
         board=flatToBoard(data.board);
         currentTurn=data.turn;
         gameOver=data.over;
         animating=false;
         mySeq=inSeq;
         render(); updateHeader();
-        if(gameOver) showGameOver();
+        if(gameOver) handleGameOver();
       });
     } else if(action.type==='slipstream'){
       board=flatToBoard(action.boardBefore);
       render(true);
-      // Replay the slide
-      doSlide(action.axis, action.idx2, action.color);
+      doSlide(action.axis,action.idx2,action.color);
       render(true);
-      fireSlipstreamBanner(action.axis, action.idx2, action.blockLen);
+      fireSlipstreamBanner(action.axis,action.idx2,action.blockLen);
       const sc=slideAnimClass(action.axis);
       const movedCells=[];
       const ax=action.axis;
@@ -314,14 +411,14 @@ function startGame(){
         });
         render();
         const flips=strToFlips(action.flips);
-        applyFlips(flips, action.color, ()=>{
+        applyFlips(flips,action.color,()=>{
           board=flatToBoard(data.board);
           currentTurn=data.turn;
           gameOver=data.over;
           animating=false;
           mySeq=inSeq;
           render(); updateHeader();
-          if(gameOver) showGameOver();
+          if(gameOver) handleGameOver();
         });
       },400);
     }
@@ -416,30 +513,90 @@ function getCounts(){let bc=0,wc=0;for(let r=0;r<8;r++)for(let c=0;c<8;c++){if(b
 function isMyTurn(){return currentTurn===myColor;}
 function slideAnimClass(axis){if(axis==='left')return'slide-right';if(axis==='right')return'slide-left';if(axis==='top')return'slide-down';return'slide-up';}
 
-// ── End turn: push final state ─────────────────────────────────────────────
+// ── End turn ───────────────────────────────────────────────────────────────
 function endTurn(action){
   const bm=validBoardCells('black').length+validEdgeCells('black').length;
   const wm=validBoardCells('white').length+validEdgeCells('white').length;
   const next=currentTurn==='black'?'white':'black';
-  let over=false, nextTurn=next;
+  let over=false,nextTurn=next;
   if(bm===0&&wm===0){over=true;nextTurn=currentTurn;}
   else if((next==='black'&&bm===0)||(next==='white'&&wm===0)){nextTurn=currentTurn;}
-
   gameOver=over;
   currentTurn=nextTurn;
   animating=false;
   mySeq=mySeq+1;
-
   update(ref(db,`games/${gameCode}`),{
-    board:boardToFlat(board),
-    turn:nextTurn,
-    over:over,
-    seq:mySeq,
-    action:action
+    board:boardToFlat(board),turn:nextTurn,over:over,seq:mySeq,action:action
   });
-
   render(); updateHeader();
-  if(over) showGameOver();
+  if(over) handleGameOver();
+}
+
+// ── Game over ───────────────────────────────────────────────────────────────
+function handleGameOver(){
+  const{bc,wc}=getCounts();
+  let winner=null;
+  if(bc===wc) winner='tie';
+  else if(bc>wc) winner='black';
+  else winner='white';
+
+  // Update record
+  if(winner==='tie') record.ties++;
+  else if(winner===myColor) record.wins++;
+  else record.losses++;
+  updateRecord();
+
+  // Confetti if we won
+  if(winner===myColor) startConfetti();
+
+  // Show popup
+  document.getElementById('popup-overlay').classList.add('show');
+  const piece=document.getElementById('popup-piece');
+  const title=document.getElementById('popup-title');
+  const score=document.getElementById('popup-score');
+  const rec=document.getElementById('popup-record');
+  if(winner==='tie'){
+    piece.className='popup-piece tie';
+    title.textContent="It's a tie!";
+  } else if(winner===myColor){
+    piece.className='popup-piece '+myColor;
+    title.textContent='You win! 🎉';
+  } else {
+    piece.className='popup-piece '+winner;
+    title.textContent='You lose.';
+  }
+  score.textContent=`${bc} — ${wc}`;
+  rec.textContent=`Session: ${record.wins}W ${record.losses}L ${record.ties}T`;
+  document.getElementById('replay-btn').disabled=false;
+  document.getElementById('replay-status').textContent='';
+  // Clear any stale rematch state
+  update(ref(db,`games/${gameCode}`),{rematch:null});
+}
+
+// ── Rematch ────────────────────────────────────────────────────────────────
+window.requestReplay=function(){
+  document.getElementById('replay-btn').disabled=true;
+  const rm={};
+  rm[myColor]='ready';
+  update(ref(db,`games/${gameCode}`),{rematch:rm});
+  updateRematchUI(true,false);
+};
+
+function updateRematchUI(myReady,oppReady){
+  const btn=document.getElementById('replay-btn');
+  const status=document.getElementById('replay-status');
+  if(myReady&&oppReady){
+    status.textContent='Starting...';
+  } else if(myReady&&!oppReady){
+    btn.disabled=true;
+    status.textContent='Waiting for opponent...';
+  } else if(!myReady&&oppReady){
+    btn.disabled=false;
+    status.textContent='Opponent wants a rematch!';
+  } else {
+    btn.disabled=false;
+    status.textContent='';
+  }
 }
 
 // ── Place moves ────────────────────────────────────────────────────────────
@@ -451,8 +608,8 @@ function placeBoard(r,c){
   board[r][c]=color;
   const flips=getFlipsFrom(r,c,color);
   animating=true; render();
-  applyFlips(flips, color, ()=>{
-    endTurn({type:'board', r, c, color, flips:flipsToStr(flips), boardBefore});
+  applyFlips(flips,color,()=>{
+    endTurn({type:'board',r,c,color,flips:flipsToStr(flips),boardBefore});
   });
 }
 
@@ -485,8 +642,8 @@ function placeEdge(axis,idx2){
     const[lr,lc]=landingPos(axis,idx2);
     const postFlips=getFlipsFrom(lr,lc,color);
     render();
-    applyFlips(postFlips, color, ()=>{
-      endTurn({type:'slipstream', axis, idx2, blockLen, color, flips:flipsToStr(postFlips), boardBefore});
+    applyFlips(postFlips,color,()=>{
+      endTurn({type:'slipstream',axis,idx2,blockLen,color,flips:flipsToStr(postFlips),boardBefore});
     });
   },400);
 }
@@ -555,6 +712,10 @@ function fireSlipstreamBanner(axis,idx2,blockLen){
 }
 
 // ── UI ─────────────────────────────────────────────────────────────────────
+function updateRecord(){
+  document.getElementById('record-bar').textContent=
+    `${record.wins}W — ${record.losses}L — ${record.ties}T`;
+}
 function updateHeader(){
   const{bc,wc}=getCounts();
   document.getElementById('score-black').textContent=bc;
@@ -567,24 +728,6 @@ function updateHeader(){
   else if(isMyTurn()){sb.innerHTML='Your turn';sb.className='status-bar your-turn';}
   else{sb.innerHTML='<span class="pulse-dot"></span> Waiting...';sb.className='status-bar their-turn';}
 }
-function showGameOver(){
-  const{bc,wc}=getCounts();
-  document.getElementById('popup-overlay').classList.add('show');
-  const piece=document.getElementById('popup-piece');
-  const title=document.getElementById('popup-title');
-  const sub=document.getElementById('popup-sub');
-  if(bc===wc){piece.className='popup-piece tie';title.textContent="It's a tie!";sub.textContent=`${bc} — ${wc}`;}
-  else if(bc>wc){piece.className='popup-piece black';title.textContent='Black wins!';sub.textContent=`${bc} — ${wc}`;}
-  else{piece.className='popup-piece white';title.textContent='White wins!';sub.textContent=`${wc} — ${bc}`;}
-}
-window.newGameFromEnd=async function(){
-  if(myColor==='black'){
-    board=freshBoard(); currentTurn='black'; gameOver=false; mySeq=0;
-    await set(ref(db,`games/${gameCode}`),{board:boardToFlat(board),turn:'black',over:false,seq:0,action:null,black:'connected',white:'connected'});
-  }
-  document.getElementById('popup-overlay').classList.remove('show');
-  render(); updateHeader();
-};
 function makePiece(color){
   const s=Math.round(CELL*.77);
   const scene=document.createElement('div');
