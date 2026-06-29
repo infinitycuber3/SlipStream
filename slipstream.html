@@ -406,8 +406,10 @@ window.createGame=async function(){
   document.getElementById('lobby').style.display='none';
   document.getElementById('waiting').style.display='flex';
   document.getElementById('game-code-display').textContent=gameCode;
-  const unsub=onValue(ref(db,`games/${gameCode}/white`),snap=>{
-    if(snap.val()==='connected'){unsub();startGame();}
+  const unsub=onValue(ref(db,`games/${gameCode}`),snap=>{
+    if(!snap.val())return;
+    const d=snap.val();
+    if(d.white==='connected'&&d.black==='connected'){unsub();startGame();}
   });
 };
 
@@ -417,7 +419,7 @@ window.joinGame=async function(){
   const snap=await get(ref(db,`games/${code}`));
   if(!snap.exists()){setErr('Game not found');return;}
   const data=snap.val();
-  if(data.white==='connected'){setErr('Game is full');return;}
+  if(data.white==='connected'&&data.black==='connected'){setErr('Game is full');return;}
 
   myHints=document.getElementById('lobby-hints-toggle').checked;
   const hostHints=(data.hints&&data.hints.black!=='off');
@@ -458,10 +460,19 @@ async function doJoin(code){
   const snap=await get(ref(db,`games/${code}`));
   if(!snap.exists()){setErr('Game not found');return;}
   const data=snap.val();
-  myColor='white';gameCode=code;
+  // Determine which color slot is open
+  let joinAs=null;
+  if(data.white!=='connected') joinAs='white';
+  else if(data.black!=='connected') joinAs='black';
+  else{setErr('Game is full');return;}
+
+  myColor=joinAs;gameCode=code;
   board=flatToBoard(data.board);currentTurn=data.turn;gameOver=data.over;
   mySeq=data.seq||0;record={wins:0,losses:0,ties:0};
-  await update(ref(db,`games/${code}`),{white:'connected','hints/white':myHints?'on':'off'});
+  const joinUpdate={};
+  joinUpdate[joinAs]='connected';
+  joinUpdate[`hints/${joinAs}`]=myHints?'on':'off';
+  await update(ref(db,`games/${code}`),joinUpdate);
   startGame();
 }
 
@@ -493,6 +504,11 @@ window.pauseCopyCode=function(){
 };
 window.leaveGame=function(){
   closePause();stopConfetti();
+  // Free up the slot so someone else (or the same person) can rejoin
+  if(gameCode&&myColor){
+    const slot={};slot[myColor]='waiting';
+    update(ref(db,`games/${gameCode}`),slot).catch(()=>{});
+  }
   if(stopListening){stopListening();stopListening=null;}
   document.getElementById('popup-overlay').classList.remove('show');
   document.getElementById('game').style.display='none';
