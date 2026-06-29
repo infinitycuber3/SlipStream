@@ -11,8 +11,8 @@
   body{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:20px 12px;min-height:100dvh;}
 
   /* ── Lobby ── */
-  #lobby{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;flex:1;width:100%;max-width:360px;}
-  #lobby h1{font-family:'Barlow Condensed',Impact,sans-serif;font-weight:800;font-style:italic;font-size:52px;letter-spacing:.04em;text-transform:uppercase;}
+  #lobby{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;flex:1;width:100%;max-width:360px;}
+  #lobby h1{font-family:'Barlow Condensed',Impact,sans-serif;font-weight:800;font-style:italic;font-size:52px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:8px;}
   .lobby-btn{width:100%;padding:14px;border:none;border-radius:10px;font-size:16px;font-weight:500;cursor:pointer;}
   .btn-new{background:#fff;color:#1a1a1a;}.btn-join{background:#333;color:#fff;}
   #join-form{display:none;flex-direction:column;gap:10px;width:100%;}
@@ -21,10 +21,11 @@
   #join-form button{padding:12px;border-radius:8px;border:none;background:#fff;color:#1a1a1a;font-size:15px;font-weight:500;cursor:pointer;}
   .lobby-err{color:#ff6b6b;font-size:13px;text-align:center;min-height:18px;}
 
-  /* Hints toggle (lobby) */
-  .hints-row{display:flex;align-items:center;justify-content:space-between;width:100%;padding:0 2px;}
+  /* Hints toggle */
+  .hints-row{display:flex;align-items:center;justify-content:space-between;width:100%;padding:12px 16px;background:#222;border-radius:10px;border:1px solid #333;}
   .hints-label{font-size:14px;color:#aaa;}
-  .toggle-track{position:relative;width:44px;height:26px;cursor:pointer;}
+  .hints-sub{font-size:11px;color:#555;margin-top:1px;}
+  .toggle-track{position:relative;width:44px;height:26px;cursor:pointer;flex-shrink:0;}
   .toggle-track input{opacity:0;width:0;height:0;position:absolute;}
   .toggle-knob{position:absolute;inset:0;background:#333;border-radius:13px;transition:background .2s;}
   .toggle-track input:checked + .toggle-knob{background:#5a8f5a;}
@@ -56,6 +57,11 @@
   .menu-btn{background:none;border:none;color:#555;cursor:pointer;padding:6px;display:flex;align-items:center;flex-shrink:0;}
   .menu-btn:hover{color:#aaa;}
   .menu-btn svg{width:22px;height:22px;}
+
+  /* Hints mismatch toast */
+  .hints-toast{display:none;align-items:center;gap:8px;background:#2a1f00;border:1px solid #5a4500;border-radius:8px;padding:8px 12px;font-size:12px;color:#d4a843;width:100%;max-width:520px;}
+  .hints-toast.show{display:flex;}
+  .hints-toast-icon{font-size:14px;flex-shrink:0;}
 
   /* ── Board ── */
   .board-outer{display:grid;grid-template-columns:44px auto 44px;grid-template-rows:44px auto 44px;position:relative;}
@@ -96,7 +102,7 @@
   @keyframes slideDown{from{transform:translateY(calc(-1*var(--cell)));}to{transform:translateY(0);}}
   @keyframes slideUp{from{transform:translateY(var(--cell));}to{transform:translateY(0);}}
 
-  /* ── Slipstream banner ── */
+  /* ── Banner ── */
   .slipstream-banner{position:absolute;z-index:300;pointer-events:none;display:flex;align-items:center;justify-content:center;opacity:0;overflow:hidden;}
   .slipstream-banner svg{position:absolute;inset:0;width:100%;height:100%;}
   .slipstream-banner span{font-family:'Barlow Condensed',Impact,sans-serif;font-weight:800;font-style:italic;text-transform:uppercase;color:#fff;letter-spacing:.04em;line-height:1;white-space:nowrap;text-shadow:0 2px 8px rgba(0,0,0,.6),0 0 2px rgba(0,0,0,.9);display:block;position:relative;z-index:1;}
@@ -119,43 +125,41 @@
   .slipstream-banner.dir-up.animate .sline{animation:speedLineAnim .9s ease forwards;}
   @keyframes sweepUp{0%{transform:rotate(-90deg) translateX(-110%) skewX(-8deg);}18%{transform:rotate(-90deg) translateX(0%) skewX(-8deg);}75%{transform:rotate(-90deg) translateX(0%) skewX(-8deg);}100%{transform:rotate(-90deg) translateX(110%) skewX(-8deg);}}
 
-  /* ── Game-over popup ── */
-  .popup-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.78);align-items:center;justify-content:center;}
-  .popup-overlay.show{display:flex;}
-  .popup{background:#2a2a2a;border:1px solid #444;border-radius:20px;padding:32px 28px;display:flex;flex-direction:column;align-items:center;gap:14px;min-width:240px;max-width:300px;width:90%;}
+  /* ── Overlays ── */
+  .overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.78);align-items:center;justify-content:center;}
+  .overlay.show{display:flex;}
+  .modal{background:#2a2a2a;border:1px solid #444;border-radius:20px;padding:28px;display:flex;flex-direction:column;align-items:center;gap:14px;min-width:240px;max-width:300px;width:90%;}
+  .modal-title{font-size:18px;font-weight:600;color:#fff;text-align:center;}
+  .modal-body{font-size:14px;color:#888;text-align:center;line-height:1.5;}
+  .modal-btn{width:100%;padding:12px;border-radius:10px;border:none;font-size:15px;font-weight:600;cursor:pointer;}
+  .modal-btn.primary{background:#fff;color:#1a1a1a;}
+  .modal-btn.secondary{background:#333;color:#fff;}
+  .modal-divider{width:100%;height:1px;background:#333;}
+
+  /* game-over popup */
   .popup-piece{width:60px;height:60px;border-radius:50%;flex-shrink:0;}
   .popup-piece.black{background:#2a2a2a;border:2px solid #555;}
   .popup-piece.white{background:#e8e8e8;border:2px solid #bbb;}
   .popup-piece.tie{background:linear-gradient(135deg,#2a2a2a 50%,#e8e8e8 50%);border:2px solid #888;}
-  .popup-title{font-size:24px;font-weight:600;color:#fff;margin:0;text-align:center;}
   .popup-score{font-size:14px;color:#888;margin:0;text-align:center;}
   .popup-record{font-size:13px;color:#666;text-align:center;}
-  .popup-divider{width:100%;height:1px;background:#333;}
-  /* hints toggle in popup */
-  .popup-hints-row{display:flex;align-items:center;justify-content:space-between;width:100%;font-size:13px;color:#aaa;}
-  .replay-section{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;}
+  .popup-hints-row{display:flex;align-items:center;justify-content:space-between;width:100%;font-size:13px;color:#aaa;padding:2px 0;}
   .replay-btn{width:100%;padding:12px;border-radius:10px;border:none;background:#fff;color:#1a1a1a;font-size:15px;font-weight:600;cursor:pointer;}
   .replay-btn:disabled{opacity:.4;cursor:default;}
   .replay-status{font-size:12px;color:#666;text-align:center;min-height:16px;}
 
   /* ── Pause menu ── */
-  .pause-overlay{display:none;position:fixed;inset:0;z-index:250;background:rgba(0,0,0,.84);align-items:center;justify-content:center;}
-  .pause-overlay.show{display:flex;}
-  .pause-menu{background:#2a2a2a;border:1px solid #444;border-radius:20px;padding:32px 28px;display:flex;flex-direction:column;align-items:center;gap:16px;min-width:240px;max-width:300px;width:90%;}
   .pause-title{font-family:'Barlow Condensed',Impact,sans-serif;font-weight:800;font-style:italic;font-size:28px;letter-spacing:.04em;text-transform:uppercase;}
   .pause-code-label{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.1em;text-align:center;}
   .pause-code{font-size:36px;font-weight:500;letter-spacing:.2em;color:#fff;}
   .pause-copy-btn{padding:7px 16px;border-radius:8px;border:1px solid #444;background:#333;color:#fff;font-size:13px;cursor:pointer;}
   .pause-copy-btn:hover{background:#444;}
-  .pause-divider{width:100%;height:1px;background:#333;}
-  .pause-resume-btn{width:100%;padding:12px;border-radius:10px;border:none;background:#fff;color:#1a1a1a;font-size:15px;font-weight:600;cursor:pointer;}
   .pause-leave-btn{width:100%;padding:12px;border-radius:10px;border:none;background:#2f1f1f;color:#ff6b6b;font-size:15px;font-weight:500;cursor:pointer;}
   .pause-leave-btn:hover{background:#3a2020;}
 
   /* ── Confetti ── */
   #confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:199;}
 
-  /* ── Status bar ── */
   .status-bar{font-size:13px;color:#666;min-height:18px;display:flex;align-items:center;gap:6px;}
   .status-bar.your-turn{color:#a8d8a8;}.status-bar.their-turn{color:#888;}
   .pulse-dot{width:7px;height:7px;border-radius:50%;background:#888;display:inline-block;animation:pulse 1.2s ease-in-out infinite;}
@@ -169,17 +173,20 @@
 <div id="lobby">
   <h1>Slipstream</h1>
   <button class="lobby-btn btn-new" onclick="createGame()">New game</button>
+  <div class="hints-row">
+    <div>
+      <div class="hints-label">Hints</div>
+      <div class="hints-sub">Show available moves</div>
+    </div>
+    <label class="toggle-track">
+      <input type="checkbox" id="lobby-hints-toggle" checked onchange="onLobbyHintsChange()">
+      <span class="toggle-knob"></span>
+    </label>
+  </div>
   <button class="lobby-btn btn-join" onclick="showJoinForm()">Join game</button>
   <div id="join-form">
     <input id="code-input" maxlength="4" placeholder="Enter 4-letter code" oninput="this.value=this.value.toUpperCase()">
     <button onclick="joinGame()">Join</button>
-  </div>
-  <div class="hints-row">
-    <span class="hints-label">Hints</span>
-    <label class="toggle-track">
-      <input type="checkbox" id="lobby-hints-toggle" checked onchange="toggleLobbyHints(this)">
-      <span class="toggle-knob"></span>
-    </label>
   </div>
   <div class="lobby-err" id="lobby-err"></div>
 </div>
@@ -221,6 +228,11 @@
     </div>
   </div>
   <div class="record-bar" id="record-bar"></div>
+  <!-- Hints mismatch toast -->
+  <div class="hints-toast" id="hints-toast">
+    <span class="hints-toast-icon">⚠️</span>
+    <span id="hints-toast-msg">Opponent has hints off — they can't see move indicators.</span>
+  </div>
   <div style="position:relative;">
     <div class="board-outer" id="board-outer">
       <div class="edge-top" id="edge-top"></div>
@@ -236,37 +248,48 @@
   </div>
 </div>
 
+<!-- ── HINTS MISMATCH POPUP (shown when joining) ── -->
+<div class="overlay" id="hints-mismatch-overlay">
+  <div class="modal">
+    <div class="modal-title">⚠️ Hints mismatch</div>
+    <div class="modal-body" id="hints-mismatch-body"></div>
+    <div class="modal-divider"></div>
+    <button class="modal-btn primary" id="hints-switch-btn" onclick="switchAndJoin()">Switch & join</button>
+    <button class="modal-btn secondary" onclick="proceedAnyway()">Join anyway</button>
+  </div>
+</div>
+
 <!-- ── PAUSE MENU ── -->
-<div class="pause-overlay" id="pause-overlay">
-  <div class="pause-menu">
+<div class="overlay" id="pause-overlay">
+  <div class="modal">
     <div class="pause-title">Slipstream</div>
     <div>
       <div class="pause-code-label">Room code</div>
       <div class="pause-code" id="pause-code-display">—</div>
     </div>
     <button class="pause-copy-btn" onclick="pauseCopyCode()">Copy code</button>
-    <div class="pause-divider"></div>
-    <button class="pause-resume-btn" onclick="closePause()">Resume</button>
+    <div class="modal-divider"></div>
+    <button class="modal-btn primary" onclick="closePause()">Resume</button>
     <button class="pause-leave-btn" onclick="leaveGame()">Leave game</button>
   </div>
 </div>
 
 <!-- ── GAME OVER POPUP ── -->
-<div class="popup-overlay" id="popup-overlay">
-  <div class="popup">
+<div class="overlay" id="popup-overlay">
+  <div class="modal">
     <div class="popup-piece" id="popup-piece"></div>
-    <p class="popup-title" id="popup-title"></p>
+    <p class="modal-title" id="popup-title"></p>
     <p class="popup-score" id="popup-score"></p>
     <p class="popup-record" id="popup-record"></p>
-    <div class="popup-divider"></div>
+    <div class="modal-divider"></div>
     <div class="popup-hints-row">
       <span>Hints</span>
       <label class="toggle-track">
-        <input type="checkbox" id="popup-hints-toggle" checked onchange="togglePopupHints(this)">
+        <input type="checkbox" id="popup-hints-toggle" checked onchange="onPopupHintsChange()">
         <span class="toggle-knob"></span>
       </label>
     </div>
-    <div class="replay-section">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;">
       <button class="replay-btn" id="replay-btn" onclick="requestReplay()">Rematch</button>
       <div class="replay-status" id="replay-status"></div>
     </div>
@@ -290,7 +313,6 @@ const app=initializeApp(firebaseConfig);
 const db=getDatabase(app);
 
 const DIRS8=[[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]];
-const DIRS4=[[0,1],[0,-1],[1,0],[-1,0]];
 
 let gameCode=null,myColor=null,currentTurn='black';
 let board=freshBoard();
@@ -299,19 +321,19 @@ let CELL=52,EDGE=44;
 let stopListening=null;
 let mySeq=0;
 let record={wins:0,losses:0,ties:0};
-// hints: true = show move indicators. Both players must agree.
-let myHints=true;       // what I've chosen
-let oppHints=true;      // what opponent has chosen (synced via Firebase)
-let hintsOn=true;       // effective: both must be on
+let myHints=true;
+let oppHints=true;
+// for join mismatch flow
+let pendingJoinCode=null;
 
-// ── Confetti ────────────────────────────────────────────────────────────────
+// ── Confetti ─────────────────────────────────────────────────────────────────
 const canvas=document.getElementById('confetti-canvas');
 const ctx=canvas.getContext('2d');
 let confettiParticles=[],confettiAnim=null;
 function startConfetti(){
   canvas.width=window.innerWidth;canvas.height=window.innerHeight;confettiParticles=[];
   const colors=['#f94144','#f3722c','#f8961e','#f9c74f','#90be6d','#43aa8b','#577590','#e8e8e8'];
-  for(let i=0;i<180;i++){confettiParticles.push({x:Math.random()*canvas.width,y:-10-Math.random()*200,w:6+Math.random()*8,h:4+Math.random()*6,color:colors[Math.floor(Math.random()*colors.length)],rot:Math.random()*Math.PI*2,rotSpeed:(Math.random()-.5)*.15,vx:(Math.random()-.5)*3,vy:2+Math.random()*3,alpha:1});}
+  for(let i=0;i<180;i++)confettiParticles.push({x:Math.random()*canvas.width,y:-10-Math.random()*200,w:6+Math.random()*8,h:4+Math.random()*6,color:colors[Math.floor(Math.random()*colors.length)],rot:Math.random()*Math.PI*2,rotSpeed:(Math.random()-.5)*.15,vx:(Math.random()-.5)*3,vy:2+Math.random()*3,alpha:1});
   if(confettiAnim)cancelAnimationFrame(confettiAnim);drawConfetti();
 }
 function drawConfetti(){
@@ -321,7 +343,7 @@ function drawConfetti(){
 }
 function stopConfetti(){if(confettiAnim){cancelAnimationFrame(confettiAnim);confettiAnim=null;}ctx.clearRect(0,0,canvas.width,canvas.height);confettiParticles=[];}
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────────────
 function freshBoard(){const b=Array.from({length:8},()=>Array(8).fill(null));b[3][3]='white';b[3][4]='black';b[4][3]='black';b[4][4]='white';return b;}
 function boardToFlat(b){return b.map(r=>r.map(v=>v||'').join(',')).join('|');}
 function flatToBoard(s){return s.split('|').map(r=>r.split(',').map(v=>v||null));}
@@ -330,30 +352,45 @@ function strToFlips(s){if(!s||s==='')return[];return s.split(';').filter(Boolean
 function randCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ';return Array.from({length:4},()=>c[Math.floor(Math.random()*c.length)]).join('');}
 
 function pushHints(){
+  if(!gameCode)return;
   const obj={};obj[myColor]=myHints?'on':'off';
   update(ref(db,`games/${gameCode}/hints`),obj);
 }
+
 function syncHintsFromData(data){
-  if(!data.hints) return;
+  if(!data.hints)return;
   const oppColor=myColor==='black'?'white':'black';
   oppHints=(data.hints[oppColor]!=='off');
-  hintsOn=myHints&&oppHints;
+  updateHintsToast();
 }
 
-// ── Hints toggles ────────────────────────────────────────────────────────────
-window.toggleLobbyHints=function(el){
-  myHints=el.checked;
-  // sync popup toggle too
+function updateHintsToast(){
+  const toast=document.getElementById('hints-toast');
+  const msg=document.getElementById('hints-toast-msg');
+  if(myHints&&!oppHints){
+    msg.textContent="Opponent has hints off — they can't see move indicators.";
+    toast.classList.add('show');
+  } else if(!myHints&&oppHints){
+    msg.textContent="You have hints off — your opponent can see their moves but you can't.";
+    toast.classList.add('show');
+  } else {
+    toast.classList.remove('show');
+  }
+}
+
+// ── Hints toggle handlers ─────────────────────────────────────────────────────
+window.onLobbyHintsChange=function(){
+  myHints=document.getElementById('lobby-hints-toggle').checked;
   document.getElementById('popup-hints-toggle').checked=myHints;
-  if(gameCode) pushHints();
+  if(gameCode)pushHints();
 };
-window.togglePopupHints=function(el){
-  myHints=el.checked;
+window.onPopupHintsChange=function(){
+  myHints=document.getElementById('popup-hints-toggle').checked;
   document.getElementById('lobby-hints-toggle').checked=myHints;
-  if(gameCode) pushHints();
+  if(gameCode)pushHints();
 };
 
-// ── Lobby ────────────────────────────────────────────────────────────────────
+// ── Lobby ─────────────────────────────────────────────────────────────────────
 window.showJoinForm=function(){document.getElementById('join-form').style.display='flex';};
 
 window.createGame=async function(){
@@ -381,14 +418,52 @@ window.joinGame=async function(){
   if(!snap.exists()){setErr('Game not found');return;}
   const data=snap.val();
   if(data.white==='connected'){setErr('Game is full');return;}
+
+  myHints=document.getElementById('lobby-hints-toggle').checked;
+  const hostHints=(data.hints&&data.hints.black!=='off');
+
+  // Check mismatch
+  if(myHints!==hostHints){
+    pendingJoinCode=code;
+    const body=document.getElementById('hints-mismatch-body');
+    const switchBtn=document.getElementById('hints-switch-btn');
+    if(myHints&&!hostHints){
+      body.textContent="You have hints on, but the host has them off. If you join, they won't see move indicators. Switch yours off to match?";
+      switchBtn.textContent='Turn hints off & join';
+    } else {
+      body.textContent="You have hints off, but the host has them on. If you join, you won't see move indicators. Switch yours on to match?";
+      switchBtn.textContent='Turn hints on & join';
+    }
+    document.getElementById('hints-mismatch-overlay').classList.add('show');
+    return;
+  }
+
+  await doJoin(code);
+};
+
+window.switchAndJoin=async function(){
+  // Flip our hints to match host
+  myHints=!myHints;
+  document.getElementById('lobby-hints-toggle').checked=myHints;
+  document.getElementById('popup-hints-toggle').checked=myHints;
+  document.getElementById('hints-mismatch-overlay').classList.remove('show');
+  await doJoin(pendingJoinCode);
+};
+window.proceedAnyway=async function(){
+  document.getElementById('hints-mismatch-overlay').classList.remove('show');
+  await doJoin(pendingJoinCode);
+};
+
+async function doJoin(code){
+  const snap=await get(ref(db,`games/${code}`));
+  if(!snap.exists()){setErr('Game not found');return;}
+  const data=snap.val();
   myColor='white';gameCode=code;
   board=flatToBoard(data.board);currentTurn=data.turn;gameOver=data.over;
-  mySeq=data.seq||0;
-  record={wins:0,losses:0,ties:0};
-  myHints=document.getElementById('lobby-hints-toggle').checked;
+  mySeq=data.seq||0;record={wins:0,losses:0,ties:0};
   await update(ref(db,`games/${code}`),{white:'connected','hints/white':myHints?'on':'off'});
   startGame();
-};
+}
 
 function setErr(msg){document.getElementById('lobby-err').textContent=msg;}
 window.copyCode=function(){
@@ -405,7 +480,7 @@ window.cancelWaiting=function(){
   document.getElementById('lobby-err').textContent='';
 };
 
-// ── Pause menu ───────────────────────────────────────────────────────────────
+// ── Pause menu ────────────────────────────────────────────────────────────────
 window.openPause=function(){
   document.getElementById('pause-code-display').textContent=gameCode||'—';
   document.getElementById('pause-overlay').classList.add('show');
@@ -421,6 +496,7 @@ window.leaveGame=function(){
   if(stopListening){stopListening();stopListening=null;}
   document.getElementById('popup-overlay').classList.remove('show');
   document.getElementById('game').style.display='none';
+  document.getElementById('hints-toast').classList.remove('show');
   document.getElementById('lobby').style.display='flex';
   document.getElementById('lobby-err').textContent='';
   gameCode=null;myColor=null;board=freshBoard();
@@ -428,13 +504,14 @@ window.leaveGame=function(){
   record={wins:0,losses:0,ties:0};
 };
 
-// ── Game start ───────────────────────────────────────────────────────────────
+// ── Game start ────────────────────────────────────────────────────────────────
 function startGame(){
   document.getElementById('lobby').style.display='none';
   document.getElementById('waiting').style.display='none';
   document.getElementById('game').style.display='flex';
   document.getElementById('tag-black').textContent=myColor==='black'?'(you)':'';
   document.getElementById('tag-white').textContent=myColor==='white'?'(you)':'';
+  document.getElementById('popup-hints-toggle').checked=myHints;
   calcCellSize();render();updateHeader();updateRecord();
 
   if(stopListening)stopListening();
@@ -443,10 +520,10 @@ function startGame(){
     const data=snap.val();
     const inSeq=data.seq||0;
 
-    // Sync hints
+    // Sync hints & toast
     syncHintsFromData(data);
 
-    // Handle rematch
+    // Rematch
     if(data.rematch){
       const rm=data.rematch;
       const myReady=rm[myColor]==='ready';
@@ -457,12 +534,11 @@ function startGame(){
         stopConfetti();
         document.getElementById('popup-overlay').classList.remove('show');
         board=freshBoard();currentTurn='black';gameOver=false;animating=false;
-        // Both advance seq locally so neither triggers the opponent-move replay
-        mySeq=inSeq+1;
+        const newSeq=inSeq+1;mySeq=newSeq;
         if(myColor==='black'){
           update(ref(db,`games/${gameCode}`),{
             board:boardToFlat(board),turn:'black',over:false,
-            seq:mySeq,action:null,rematch:null,
+            seq:newSeq,action:null,rematch:null,
             hints:{black:myHints?'on':'off',white:oppHints?'on':'off'}
           });
         }
@@ -497,10 +573,8 @@ function startGame(){
       else{for(let r2=0;r2<8;r2++)if(board[r2][action.idx2])movedCells.push([r2,action.idx2]);}
       movedCells.forEach(([r2,c2])=>{
         const cell=document.getElementById('board').children[r2*8+c2];
-        const scene=cell&&cell.querySelector('.piece-scene');
-        if(!scene)return;
-        scene.classList.add('sliding');
-        scene.classList.remove('slide-right','slide-left','slide-down','slide-up');
+        const scene=cell&&cell.querySelector('.piece-scene');if(!scene)return;
+        scene.classList.add('sliding');scene.classList.remove('slide-right','slide-left','slide-down','slide-up');
         void scene.offsetWidth;scene.classList.add(sc);
       });
       setTimeout(()=>{
@@ -516,7 +590,7 @@ function startGame(){
   });
 }
 
-// ── Cell sizing ──────────────────────────────────────────────────────────────
+// ── Cell sizing ───────────────────────────────────────────────────────────────
 function calcCellSize(){
   const maxW=Math.min(window.innerWidth-24,480);
   EDGE=Math.floor(maxW/10);CELL=Math.floor((maxW-EDGE*2)/8);
@@ -531,7 +605,7 @@ function calcCellSize(){
   document.getElementById('board-outer').style.gridTemplateRows=`${EDGE}px ${CELL*8}px ${EDGE}px`;
 }
 
-// ── Game logic ───────────────────────────────────────────────────────────────
+// ── Game logic ────────────────────────────────────────────────────────────────
 function getContiguousBlock(axis,idx2){
   let r,c,dr,dc;
   if(axis==='left'){r=idx2;c=0;dr=0;dc=1;}else if(axis==='right'){r=idx2;c=7;dr=0;dc=-1;}
@@ -598,7 +672,7 @@ function getCounts(){let bc=0,wc=0;for(let r=0;r<8;r++)for(let c=0;c<8;c++){if(b
 function isMyTurn(){return currentTurn===myColor;}
 function slideAnimClass(axis){if(axis==='left')return'slide-right';if(axis==='right')return'slide-left';if(axis==='top')return'slide-down';return'slide-up';}
 
-// ── End turn ─────────────────────────────────────────────────────────────────
+// ── End turn ──────────────────────────────────────────────────────────────────
 function endTurn(action){
   const bm=validBoardCells('black').length+validEdgeCells('black').length;
   const wm=validBoardCells('white').length+validEdgeCells('white').length;
@@ -630,9 +704,7 @@ function handleGameOver(){
   document.getElementById('popup-record').textContent=`Session: ${record.wins}W ${record.losses}L ${record.ties}T`;
   document.getElementById('replay-btn').disabled=false;
   document.getElementById('replay-status').textContent='';
-  // Sync popup hints toggle to current state
   document.getElementById('popup-hints-toggle').checked=myHints;
-  // Push our hints pref and clear any stale rematch
   update(ref(db,`games/${gameCode}`),{rematch:null});
   pushHints();
 }
@@ -641,7 +713,6 @@ function handleGameOver(){
 window.requestReplay=function(){
   document.getElementById('replay-btn').disabled=true;
   const rm={};rm[myColor]='ready';
-  // Merge into existing rematch object
   update(ref(db,`games/${gameCode}/rematch`),rm);
   updateRematchUI(true,false);
 };
@@ -746,13 +817,12 @@ function makePiece(color){
 }
 function render(suppressValid){
   const myTurn=isMyTurn();
-  // hintsOn = both players want hints. If suppressValid or animating, never show.
-  const showHints=hintsOn&&!animating&&!suppressValid&&!gameOver&&myTurn;
+  const showHints=myHints&&!animating&&!suppressValid&&!gameOver&&myTurn;
+  const canClick=!animating&&!suppressValid&&!gameOver&&myTurn;
   const vBoard=showHints?validBoardCells(currentTurn):[];
+  const clickBoard=canClick&&!showHints?validBoardCells(currentTurn):[];
   const vEdge=showHints?validEdgeCells(currentTurn):[];
-  // Still need clickable cells even without hints dots
-  const clickBoard=!animating&&!suppressValid&&!gameOver&&myTurn?validBoardCells(currentTurn):[];
-  const clickEdge=!animating&&!suppressValid&&!gameOver&&myTurn?validEdgeCells(currentTurn):[];
+  const clickEdge=canClick&&!showHints?validEdgeCells(currentTurn):[];
   const vBoardSet=new Set(vBoard.map(([r,c])=>r*8+c));
   const clickBoardSet=new Set(clickBoard.map(([r,c])=>r*8+c));
   const vLeft=new Set(vEdge.filter(e=>e.axis==='left').map(e=>e.idx2));
@@ -766,18 +836,15 @@ function render(suppressValid){
 
   const boardEl=document.getElementById('board');boardEl.innerHTML='';
   for(let r=0;r<8;r++)for(let c=0;c<8;c++){
-    const v=board[r][c];const isLight=(r+c)%2===0;
+    const v=board[r][c];const isLight=(r+c)%2===0;const flat=r*8+c;
     const cell=document.createElement('div');cell.className='cell';cell.style.width=CELL+'px';cell.style.height=CELL+'px';
-    const flat=r*8+c;
     if(v){
       cell.classList.add('has-piece',isLight?'light':'dark');
       if(animating)cell.classList.add('locked');else cell.onclick=()=>placeBoard(r,c);
       cell.appendChild(makePiece(v));
     } else if(vBoardSet.has(flat)){
-      // Hints on — show dot
       cell.classList.add(isLight?'valid-light':'valid-dark');cell.onclick=()=>placeBoard(r,c);
     } else if(clickBoardSet.has(flat)){
-      // Hints off — still clickable but no dot (just plain square)
       cell.classList.add(isLight?'light':'dark');cell.onclick=()=>placeBoard(r,c);cell.style.cursor='pointer';
     } else{cell.classList.add(isLight?'light':'dark');}
     boardEl.appendChild(cell);
