@@ -9,6 +9,8 @@
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
   html,body{height:100%;background:#1a1a1a;color:#fff;font-family:'Inter',sans-serif;}
   body{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:20px 12px;min-height:100dvh;}
+
+  /* ── Lobby ── */
   #lobby{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;flex:1;width:100%;max-width:360px;}
   #lobby h1{font-family:'Barlow Condensed',Impact,sans-serif;font-weight:800;font-style:italic;font-size:52px;letter-spacing:.04em;text-transform:uppercase;}
   .lobby-btn{width:100%;padding:14px;border:none;border-radius:10px;font-size:16px;font-weight:500;cursor:pointer;}
@@ -18,30 +20,29 @@
   #join-form input::placeholder{color:#666;text-transform:none;letter-spacing:0;}
   #join-form button{padding:12px;border-radius:8px;border:none;background:#fff;color:#1a1a1a;font-size:15px;font-weight:500;cursor:pointer;}
   .lobby-err{color:#ff6b6b;font-size:13px;text-align:center;min-height:18px;}
-  #waiting{display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;flex:1;width:100%;max-width:360px;text-align:center;}
+
+  /* Hints toggle (lobby) */
+  .hints-row{display:flex;align-items:center;justify-content:space-between;width:100%;padding:0 2px;}
+  .hints-label{font-size:14px;color:#aaa;}
+  .toggle-track{position:relative;width:44px;height:26px;cursor:pointer;}
+  .toggle-track input{opacity:0;width:0;height:0;position:absolute;}
+  .toggle-knob{position:absolute;inset:0;background:#333;border-radius:13px;transition:background .2s;}
+  .toggle-track input:checked + .toggle-knob{background:#5a8f5a;}
+  .toggle-knob:before{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:4px;left:4px;transition:transform .2s;}
+  .toggle-track input:checked + .toggle-knob:before{transform:translateX(18px);}
+
+  /* ── Waiting ── */
+  #waiting{display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;flex:1;width:100%;max-width:360px;text-align:center;position:relative;}
   #waiting h2{font-size:20px;font-weight:500;}
   #game-code-display{font-size:40px;font-weight:500;letter-spacing:.2em;}
   #waiting p{font-size:14px;color:#888;line-height:1.6;}
   .copy-btn{padding:10px 20px;border-radius:8px;border:1px solid #444;background:#2a2a2a;color:#fff;font-size:14px;cursor:pointer;}
   .spinner{width:32px;height:32px;border:3px solid #333;border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg);}}
-  #waiting{position:relative;}
   .back-btn{position:absolute;top:0;left:0;background:none;border:none;color:#666;cursor:pointer;padding:4px;display:flex;align-items:center;gap:6px;font-size:14px;}
   .back-btn:hover{color:#aaa;}
-  .pause-btn{background:none;border:none;color:#555;cursor:pointer;padding:4px;display:flex;align-items:center;}
-  .pause-btn:hover{color:#aaa;}
-  .pause-overlay{display:none;position:fixed;inset:0;z-index:250;background:rgba(0,0,0,.82);align-items:center;justify-content:center;}
-  .pause-overlay.show{display:flex;}
-  .pause-menu{background:#2a2a2a;border:1px solid #444;border-radius:20px;padding:32px 28px;display:flex;flex-direction:column;align-items:center;gap:16px;min-width:240px;max-width:300px;width:90%;}
-  .pause-title{font-family:'Barlow Condensed',Impact,sans-serif;font-weight:800;font-style:italic;font-size:28px;letter-spacing:.04em;text-transform:uppercase;}
-  .pause-code-label{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.1em;}
-  .pause-code{font-size:36px;font-weight:500;letter-spacing:.2em;color:#fff;}
-  .pause-copy-btn{padding:7px 16px;border-radius:8px;border:1px solid #444;background:#333;color:#fff;font-size:13px;cursor:pointer;}
-  .pause-copy-btn:hover{background:#444;}
-  .pause-divider{width:100%;height:1px;background:#333;}
-  .pause-leave-btn{width:100%;padding:12px;border-radius:10px;border:none;background:#2f1f1f;color:#ff6b6b;font-size:15px;font-weight:500;cursor:pointer;}
-  .pause-leave-btn:hover{background:#3a2020;}
-  .pause-resume-btn{width:100%;padding:12px;border-radius:10px;border:none;background:#fff;color:#1a1a1a;font-size:15px;font-weight:600;cursor:pointer;}
+
+  /* ── Game ── */
   #game{display:none;flex-direction:column;align-items:center;gap:14px;width:100%;}
   .game-header{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:520px;padding:0 4px;}
   .player-chip{display:flex;align-items:center;gap:8px;font-size:14px;color:#aaa;padding:6px 12px;border-radius:20px;border:1.5px solid transparent;transition:border-color .2s,color .2s;}
@@ -52,6 +53,11 @@
   .score{font-weight:500;font-size:15px;}
   .your-tag{font-size:11px;color:#666;margin-left:2px;}
   .record-bar{font-size:12px;color:#555;letter-spacing:.02em;}
+  .menu-btn{background:none;border:none;color:#555;cursor:pointer;padding:6px;display:flex;align-items:center;flex-shrink:0;}
+  .menu-btn:hover{color:#aaa;}
+  .menu-btn svg{width:22px;height:22px;}
+
+  /* ── Board ── */
   .board-outer{display:grid;grid-template-columns:44px auto 44px;grid-template-rows:44px auto 44px;position:relative;}
   .edge-top{grid-column:2;grid-row:1;display:grid;position:relative;z-index:10;}
   .edge-bottom{grid-column:2;grid-row:3;display:grid;position:relative;z-index:10;}
@@ -69,6 +75,8 @@
   .edge-cell{display:flex;align-items:center;justify-content:center;position:relative;overflow:visible;border-radius:4px;}
   .edge-cell.valid-edge{background:rgba(180,140,90,.18);cursor:pointer;}
   .edge-cell.valid-edge::after{content:'';position:absolute;width:28%;height:28%;border-radius:50%;background:rgba(150,110,60,.25);border:1.5px solid rgba(120,85,40,.4);pointer-events:none;}
+
+  /* ── Pieces ── */
   .piece-scene{transform-style:preserve-3d;position:relative;z-index:20;}
   .piece-scene.sliding{z-index:100;}
   .face{border-radius:50%;position:absolute;backface-visibility:hidden;-webkit-backface-visibility:hidden;}
@@ -87,6 +95,8 @@
   @keyframes slideLeft{from{transform:translateX(var(--cell));}to{transform:translateX(0);}}
   @keyframes slideDown{from{transform:translateY(calc(-1*var(--cell)));}to{transform:translateY(0);}}
   @keyframes slideUp{from{transform:translateY(var(--cell));}to{transform:translateY(0);}}
+
+  /* ── Slipstream banner ── */
   .slipstream-banner{position:absolute;z-index:300;pointer-events:none;display:flex;align-items:center;justify-content:center;opacity:0;overflow:hidden;}
   .slipstream-banner svg{position:absolute;inset:0;width:100%;height:100%;}
   .slipstream-banner span{font-family:'Barlow Condensed',Impact,sans-serif;font-weight:800;font-style:italic;text-transform:uppercase;color:#fff;letter-spacing:.04em;line-height:1;white-space:nowrap;text-shadow:0 2px 8px rgba(0,0,0,.6),0 0 2px rgba(0,0,0,.9);display:block;position:relative;z-index:1;}
@@ -109,10 +119,10 @@
   .slipstream-banner.dir-up.animate .sline{animation:speedLineAnim .9s ease forwards;}
   @keyframes sweepUp{0%{transform:rotate(-90deg) translateX(-110%) skewX(-8deg);}18%{transform:rotate(-90deg) translateX(0%) skewX(-8deg);}75%{transform:rotate(-90deg) translateX(0%) skewX(-8deg);}100%{transform:rotate(-90deg) translateX(110%) skewX(-8deg);}}
 
-  /* Popup */
-  .popup-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.75);align-items:center;justify-content:center;}
+  /* ── Game-over popup ── */
+  .popup-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.78);align-items:center;justify-content:center;}
   .popup-overlay.show{display:flex;}
-  .popup{background:#2a2a2a;border:1px solid #444;border-radius:20px;padding:32px 28px;display:flex;flex-direction:column;align-items:center;gap:14px;min-width:240px;max-width:300px;width:90%;position:relative;overflow:hidden;}
+  .popup{background:#2a2a2a;border:1px solid #444;border-radius:20px;padding:32px 28px;display:flex;flex-direction:column;align-items:center;gap:14px;min-width:240px;max-width:300px;width:90%;}
   .popup-piece{width:60px;height:60px;border-radius:50%;flex-shrink:0;}
   .popup-piece.black{background:#2a2a2a;border:2px solid #555;}
   .popup-piece.white{background:#e8e8e8;border:2px solid #bbb;}
@@ -120,15 +130,32 @@
   .popup-title{font-size:24px;font-weight:600;color:#fff;margin:0;text-align:center;}
   .popup-score{font-size:14px;color:#888;margin:0;text-align:center;}
   .popup-record{font-size:13px;color:#666;text-align:center;}
-  .replay-section{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;margin-top:4px;}
-  .replay-btn{width:100%;padding:12px;border-radius:10px;border:none;background:#fff;color:#1a1a1a;font-size:15px;font-weight:600;cursor:pointer;transition:opacity .15s;}
-  .replay-btn:hover{opacity:.9;}
+  .popup-divider{width:100%;height:1px;background:#333;}
+  /* hints toggle in popup */
+  .popup-hints-row{display:flex;align-items:center;justify-content:space-between;width:100%;font-size:13px;color:#aaa;}
+  .replay-section{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;}
+  .replay-btn{width:100%;padding:12px;border-radius:10px;border:none;background:#fff;color:#1a1a1a;font-size:15px;font-weight:600;cursor:pointer;}
   .replay-btn:disabled{opacity:.4;cursor:default;}
   .replay-status{font-size:12px;color:#666;text-align:center;min-height:16px;}
 
-  /* Confetti canvas */
+  /* ── Pause menu ── */
+  .pause-overlay{display:none;position:fixed;inset:0;z-index:250;background:rgba(0,0,0,.84);align-items:center;justify-content:center;}
+  .pause-overlay.show{display:flex;}
+  .pause-menu{background:#2a2a2a;border:1px solid #444;border-radius:20px;padding:32px 28px;display:flex;flex-direction:column;align-items:center;gap:16px;min-width:240px;max-width:300px;width:90%;}
+  .pause-title{font-family:'Barlow Condensed',Impact,sans-serif;font-weight:800;font-style:italic;font-size:28px;letter-spacing:.04em;text-transform:uppercase;}
+  .pause-code-label{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.1em;text-align:center;}
+  .pause-code{font-size:36px;font-weight:500;letter-spacing:.2em;color:#fff;}
+  .pause-copy-btn{padding:7px 16px;border-radius:8px;border:1px solid #444;background:#333;color:#fff;font-size:13px;cursor:pointer;}
+  .pause-copy-btn:hover{background:#444;}
+  .pause-divider{width:100%;height:1px;background:#333;}
+  .pause-resume-btn{width:100%;padding:12px;border-radius:10px;border:none;background:#fff;color:#1a1a1a;font-size:15px;font-weight:600;cursor:pointer;}
+  .pause-leave-btn{width:100%;padding:12px;border-radius:10px;border:none;background:#2f1f1f;color:#ff6b6b;font-size:15px;font-weight:500;cursor:pointer;}
+  .pause-leave-btn:hover{background:#3a2020;}
+
+  /* ── Confetti ── */
   #confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:199;}
 
+  /* ── Status bar ── */
   .status-bar{font-size:13px;color:#666;min-height:18px;display:flex;align-items:center;gap:6px;}
   .status-bar.your-turn{color:#a8d8a8;}.status-bar.their-turn{color:#888;}
   .pulse-dot{width:7px;height:7px;border-radius:50%;background:#888;display:inline-block;animation:pulse 1.2s ease-in-out infinite;}
@@ -136,9 +163,9 @@
 </style>
 </head>
 <body>
-
 <canvas id="confetti-canvas"></canvas>
 
+<!-- ── LOBBY ── -->
 <div id="lobby">
   <h1>Slipstream</h1>
   <button class="lobby-btn btn-new" onclick="createGame()">New game</button>
@@ -147,12 +174,20 @@
     <input id="code-input" maxlength="4" placeholder="Enter 4-letter code" oninput="this.value=this.value.toUpperCase()">
     <button onclick="joinGame()">Join</button>
   </div>
+  <div class="hints-row">
+    <span class="hints-label">Hints</span>
+    <label class="toggle-track">
+      <input type="checkbox" id="lobby-hints-toggle" checked onchange="toggleLobbyHints(this)">
+      <span class="toggle-knob"></span>
+    </label>
+  </div>
   <div class="lobby-err" id="lobby-err"></div>
 </div>
 
+<!-- ── WAITING ── -->
 <div id="waiting">
   <button class="back-btn" onclick="cancelWaiting()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     Back
   </button>
   <h2>Game created!</h2>
@@ -163,6 +198,7 @@
   <p style="font-size:13px;color:#555;">Waiting for opponent...</p>
 </div>
 
+<!-- ── GAME ── -->
 <div id="game">
   <div class="game-header">
     <div class="player-chip" id="chip-black">
@@ -171,19 +207,21 @@
       <span class="your-tag" id="tag-black"></span>
     </div>
     <div class="status-bar" id="status-bar">—</div>
-    <div style="display:flex;align-items:center;gap:6px;">
+    <div style="display:flex;align-items:center;gap:2px;">
       <div class="player-chip" id="chip-white">
         <div class="dot white"></div>
         <span class="score" id="score-white">2</span>
         <span class="your-tag" id="tag-white"></span>
       </div>
-      <button class="pause-btn" onclick="openPause()" title="Menu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      <button class="menu-btn" onclick="openPause()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
       </button>
     </div>
   </div>
   <div class="record-bar" id="record-bar"></div>
-  <div style="position:relative;" id="board-container">
+  <div style="position:relative;">
     <div class="board-outer" id="board-outer">
       <div class="edge-top" id="edge-top"></div>
       <div class="edge-left" id="edge-left"></div>
@@ -198,7 +236,7 @@
   </div>
 </div>
 
-<!-- Pause menu -->
+<!-- ── PAUSE MENU ── -->
 <div class="pause-overlay" id="pause-overlay">
   <div class="pause-menu">
     <div class="pause-title">Slipstream</div>
@@ -212,12 +250,22 @@
     <button class="pause-leave-btn" onclick="leaveGame()">Leave game</button>
   </div>
 </div>
+
+<!-- ── GAME OVER POPUP ── -->
 <div class="popup-overlay" id="popup-overlay">
   <div class="popup">
     <div class="popup-piece" id="popup-piece"></div>
     <p class="popup-title" id="popup-title"></p>
     <p class="popup-score" id="popup-score"></p>
     <p class="popup-record" id="popup-record"></p>
+    <div class="popup-divider"></div>
+    <div class="popup-hints-row">
+      <span>Hints</span>
+      <label class="toggle-track">
+        <input type="checkbox" id="popup-hints-toggle" checked onchange="togglePopupHints(this)">
+        <span class="toggle-knob"></span>
+      </label>
+    </div>
     <div class="replay-section">
       <button class="replay-btn" id="replay-btn" onclick="requestReplay()">Rematch</button>
       <div class="replay-status" id="replay-status"></div>
@@ -238,99 +286,85 @@ const firebaseConfig = {
   messagingSenderId: "955589839151",
   appId: "1:955589839151:web:0d2bc88bd215b7be4739da"
 };
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const app=initializeApp(firebaseConfig);
+const db=getDatabase(app);
 
 const DIRS8=[[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]];
 const DIRS4=[[0,1],[0,-1],[1,0],[-1,0]];
 
-let gameCode=null, myColor=null, currentTurn='black';
+let gameCode=null,myColor=null,currentTurn='black';
 let board=freshBoard();
-let animating=false, gameOver=false;
-let CELL=52, EDGE=44;
+let animating=false,gameOver=false;
+let CELL=52,EDGE=44;
 let stopListening=null;
 let mySeq=0;
+let record={wins:0,losses:0,ties:0};
+// hints: true = show move indicators. Both players must agree.
+let myHints=true;       // what I've chosen
+let oppHints=true;      // what opponent has chosen (synced via Firebase)
+let hintsOn=true;       // effective: both must be on
 
-// Session record: wins, losses, ties for myColor
-let record={wins:0, losses:0, ties:0};
-
-// ── Confetti ───────────────────────────────────────────────────────────────
+// ── Confetti ────────────────────────────────────────────────────────────────
 const canvas=document.getElementById('confetti-canvas');
 const ctx=canvas.getContext('2d');
-let confettiParticles=[];
-let confettiAnim=null;
-
+let confettiParticles=[],confettiAnim=null;
 function startConfetti(){
-  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
-  confettiParticles=[];
+  canvas.width=window.innerWidth;canvas.height=window.innerHeight;confettiParticles=[];
   const colors=['#f94144','#f3722c','#f8961e','#f9c74f','#90be6d','#43aa8b','#577590','#e8e8e8'];
-  for(let i=0;i<180;i++){
-    confettiParticles.push({
-      x:Math.random()*canvas.width,
-      y:-10-Math.random()*200,
-      w:6+Math.random()*8,
-      h:4+Math.random()*6,
-      color:colors[Math.floor(Math.random()*colors.length)],
-      rot:Math.random()*Math.PI*2,
-      rotSpeed:(Math.random()-.5)*.15,
-      vx:(Math.random()-.5)*3,
-      vy:2+Math.random()*3,
-      alpha:1
-    });
-  }
-  if(confettiAnim) cancelAnimationFrame(confettiAnim);
-  drawConfetti();
+  for(let i=0;i<180;i++){confettiParticles.push({x:Math.random()*canvas.width,y:-10-Math.random()*200,w:6+Math.random()*8,h:4+Math.random()*6,color:colors[Math.floor(Math.random()*colors.length)],rot:Math.random()*Math.PI*2,rotSpeed:(Math.random()-.5)*.15,vx:(Math.random()-.5)*3,vy:2+Math.random()*3,alpha:1});}
+  if(confettiAnim)cancelAnimationFrame(confettiAnim);drawConfetti();
 }
-
 function drawConfetti(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  let alive=false;
-  confettiParticles.forEach(p=>{
-    p.x+=p.vx; p.y+=p.vy; p.rot+=p.rotSpeed;
-    if(p.y>canvas.height+20){p.alpha=0;}
-    else{alive=true;}
-    ctx.save();
-    ctx.globalAlpha=p.alpha;
-    ctx.translate(p.x,p.y);
-    ctx.rotate(p.rot);
-    ctx.fillStyle=p.color;
-    ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
-    ctx.restore();
-  });
-  if(alive) confettiAnim=requestAnimationFrame(drawConfetti);
-  else ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.clearRect(0,0,canvas.width,canvas.height);let alive=false;
+  confettiParticles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.rot+=p.rotSpeed;if(p.y>canvas.height+20)p.alpha=0;else alive=true;ctx.save();ctx.globalAlpha=p.alpha;ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle=p.color;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();});
+  if(alive)confettiAnim=requestAnimationFrame(drawConfetti);else ctx.clearRect(0,0,canvas.width,canvas.height);
 }
+function stopConfetti(){if(confettiAnim){cancelAnimationFrame(confettiAnim);confettiAnim=null;}ctx.clearRect(0,0,canvas.width,canvas.height);confettiParticles=[];}
 
-function stopConfetti(){
-  if(confettiAnim){cancelAnimationFrame(confettiAnim);confettiAnim=null;}
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  confettiParticles=[];
-}
-
-// ── Helpers ────────────────────────────────────────────────────────────────
-function freshBoard(){
-  const b=Array.from({length:8},()=>Array(8).fill(null));
-  b[3][3]='white';b[3][4]='black';b[4][3]='black';b[4][4]='white';
-  return b;
-}
+// ── Helpers ─────────────────────────────────────────────────────────────────
+function freshBoard(){const b=Array.from({length:8},()=>Array(8).fill(null));b[3][3]='white';b[3][4]='black';b[4][3]='black';b[4][4]='white';return b;}
 function boardToFlat(b){return b.map(r=>r.map(v=>v||'').join(',')).join('|');}
 function flatToBoard(s){return s.split('|').map(r=>r.split(',').map(v=>v||null));}
 function flipsToStr(f){return f.map(([r,c])=>r+','+c).join(';');}
 function strToFlips(s){if(!s||s==='')return[];return s.split(';').filter(Boolean).map(p=>p.split(',').map(Number));}
 function randCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ';return Array.from({length:4},()=>c[Math.floor(Math.random()*c.length)]).join('');}
 
-// ── Lobby ──────────────────────────────────────────────────────────────────
+function pushHints(){
+  const obj={};obj[myColor]=myHints?'on':'off';
+  update(ref(db,`games/${gameCode}/hints`),obj);
+}
+function syncHintsFromData(data){
+  if(!data.hints) return;
+  const oppColor=myColor==='black'?'white':'black';
+  oppHints=(data.hints[oppColor]!=='off');
+  hintsOn=myHints&&oppHints;
+}
+
+// ── Hints toggles ────────────────────────────────────────────────────────────
+window.toggleLobbyHints=function(el){
+  myHints=el.checked;
+  // sync popup toggle too
+  document.getElementById('popup-hints-toggle').checked=myHints;
+  if(gameCode) pushHints();
+};
+window.togglePopupHints=function(el){
+  myHints=el.checked;
+  document.getElementById('lobby-hints-toggle').checked=myHints;
+  if(gameCode) pushHints();
+};
+
+// ── Lobby ────────────────────────────────────────────────────────────────────
 window.showJoinForm=function(){document.getElementById('join-form').style.display='flex';};
 
 window.createGame=async function(){
-  gameCode=randCode(); myColor='black';
-  board=freshBoard(); currentTurn='black'; gameOver=false; mySeq=0;
+  gameCode=randCode();myColor='black';
+  board=freshBoard();currentTurn='black';gameOver=false;mySeq=0;
   record={wins:0,losses:0,ties:0};
+  myHints=document.getElementById('lobby-hints-toggle').checked;
   await set(ref(db,`games/${gameCode}`),{
-    board:boardToFlat(board), turn:'black', over:false, seq:0,
-    action:null, black:'connected', white:'waiting',
-    rematch:null
+    board:boardToFlat(board),turn:'black',over:false,seq:0,
+    action:null,black:'connected',white:'waiting',rematch:null,
+    hints:{black:myHints?'on':'off',white:'on'}
   });
   document.getElementById('lobby').style.display='none';
   document.getElementById('waiting').style.display='flex';
@@ -347,11 +381,12 @@ window.joinGame=async function(){
   if(!snap.exists()){setErr('Game not found');return;}
   const data=snap.val();
   if(data.white==='connected'){setErr('Game is full');return;}
-  myColor='white'; gameCode=code;
-  board=flatToBoard(data.board); currentTurn=data.turn; gameOver=data.over;
+  myColor='white';gameCode=code;
+  board=flatToBoard(data.board);currentTurn=data.turn;gameOver=data.over;
   mySeq=data.seq||0;
   record={wins:0,losses:0,ties:0};
-  await update(ref(db,`games/${code}`),{white:'connected'});
+  myHints=document.getElementById('lobby-hints-toggle').checked;
+  await update(ref(db,`games/${code}`),{white:'connected','hints/white':myHints?'on':'off'});
   startGame();
 };
 
@@ -361,112 +396,99 @@ window.copyCode=function(){
   document.querySelector('.copy-btn').textContent='Copied!';
   setTimeout(()=>document.querySelector('.copy-btn').textContent='Copy code',2000);
 };
-
 window.cancelWaiting=function(){
-  // Cancel the game in Firebase and go back to lobby
-  if(gameCode) update(ref(db,`games/${gameCode}`),{white:'cancelled'}).catch(()=>{});
+  if(gameCode)update(ref(db,`games/${gameCode}`),{white:'cancelled'}).catch(()=>{});
   if(stopListening){stopListening();stopListening=null;}
-  gameCode=null; myColor=null;
+  gameCode=null;myColor=null;
   document.getElementById('waiting').style.display='none';
   document.getElementById('lobby').style.display='flex';
   document.getElementById('lobby-err').textContent='';
 };
 
+// ── Pause menu ───────────────────────────────────────────────────────────────
 window.openPause=function(){
   document.getElementById('pause-code-display').textContent=gameCode||'—';
   document.getElementById('pause-overlay').classList.add('show');
 };
-window.closePause=function(){
-  document.getElementById('pause-overlay').classList.remove('show');
-};
+window.closePause=function(){document.getElementById('pause-overlay').classList.remove('show');};
 window.pauseCopyCode=function(){
   navigator.clipboard.writeText(gameCode).catch(()=>{});
-  const btn=document.querySelector('.pause-copy-btn');
-  btn.textContent='Copied!';
+  const btn=document.querySelector('.pause-copy-btn');btn.textContent='Copied!';
   setTimeout(()=>btn.textContent='Copy code',2000);
 };
 window.leaveGame=function(){
-  closePause();
-  stopConfetti();
+  closePause();stopConfetti();
   if(stopListening){stopListening();stopListening=null;}
-  document.getElementById('pause-overlay').classList.remove('show');
   document.getElementById('popup-overlay').classList.remove('show');
   document.getElementById('game').style.display='none';
   document.getElementById('lobby').style.display='flex';
   document.getElementById('lobby-err').textContent='';
-  gameCode=null; myColor=null; board=freshBoard();
-  currentTurn='black'; gameOver=false; animating=false; mySeq=0;
+  gameCode=null;myColor=null;board=freshBoard();
+  currentTurn='black';gameOver=false;animating=false;mySeq=0;
   record={wins:0,losses:0,ties:0};
 };
 
-// ── Game start ─────────────────────────────────────────────────────────────
+// ── Game start ───────────────────────────────────────────────────────────────
 function startGame(){
   document.getElementById('lobby').style.display='none';
   document.getElementById('waiting').style.display='none';
   document.getElementById('game').style.display='flex';
   document.getElementById('tag-black').textContent=myColor==='black'?'(you)':'';
   document.getElementById('tag-white').textContent=myColor==='white'?'(you)':'';
-  calcCellSize(); render(); updateHeader(); updateRecord();
+  calcCellSize();render();updateHeader();updateRecord();
 
-  if(stopListening) stopListening();
+  if(stopListening)stopListening();
   stopListening=onValue(ref(db,`games/${gameCode}`),snap=>{
-    if(!snap.exists()) return;
+    if(!snap.exists())return;
     const data=snap.val();
     const inSeq=data.seq||0;
 
-    // Handle rematch confirmation
+    // Sync hints
+    syncHintsFromData(data);
+
+    // Handle rematch
     if(data.rematch){
       const rm=data.rematch;
       const myReady=rm[myColor]==='ready';
       const oppColor=myColor==='black'?'white':'black';
       const oppReady=rm[oppColor]==='ready';
-      updateRematchUI(myReady, oppReady);
+      updateRematchUI(myReady,oppReady);
       if(myReady&&oppReady){
-        // Both confirmed — start new game
         stopConfetti();
         document.getElementById('popup-overlay').classList.remove('show');
-        board=freshBoard(); currentTurn='black'; gameOver=false;
-        animating=false;
+        board=freshBoard();currentTurn='black';gameOver=false;animating=false;
+        // Both advance seq locally so neither triggers the opponent-move replay
+        mySeq=inSeq+1;
         if(myColor==='black'){
-          mySeq=mySeq+1;
           update(ref(db,`games/${gameCode}`),{
             board:boardToFlat(board),turn:'black',over:false,
-            seq:mySeq,action:null,rematch:null
+            seq:mySeq,action:null,rematch:null,
+            hints:{black:myHints?'on':'off',white:oppHints?'on':'off'}
           });
         }
-        render(); updateHeader(); updateRecord();
+        render();updateHeader();updateRecord();
         return;
       }
     }
 
-    if(inSeq===mySeq) return;
-    if(animating) return;
+    if(inSeq===mySeq)return;
+    if(animating)return;
     const action=data.action;
-    if(!action) return;
+    if(!action)return;
 
-    animating=true;
-    updateHeader();
+    animating=true;updateHeader();
 
     if(action.type==='board'){
-      board=flatToBoard(action.boardBefore);
-      render(true);
-      board[action.r][action.c]=action.color;
-      render(true);
-      const flips=strToFlips(action.flips);
-      applyFlips(flips,action.color,()=>{
-        board=flatToBoard(data.board);
-        currentTurn=data.turn;
-        gameOver=data.over;
-        animating=false;
-        mySeq=inSeq;
-        render(); updateHeader();
-        if(gameOver) handleGameOver();
+      board=flatToBoard(action.boardBefore);render(true);
+      board[action.r][action.c]=action.color;render(true);
+      applyFlips(strToFlips(action.flips),action.color,()=>{
+        board=flatToBoard(data.board);currentTurn=data.turn;gameOver=data.over;
+        animating=false;mySeq=inSeq;render();updateHeader();
+        if(gameOver)handleGameOver();
       });
     } else if(action.type==='slipstream'){
-      board=flatToBoard(action.boardBefore);
-      render(true);
-      doSlide(action.axis,action.idx2,action.color);
-      render(true);
+      board=flatToBoard(action.boardBefore);render(true);
+      doSlide(action.axis,action.idx2,action.color);render(true);
       fireSlipstreamBanner(action.axis,action.idx2,action.blockLen);
       const sc=slideAnimClass(action.axis);
       const movedCells=[];
@@ -479,33 +501,25 @@ function startGame(){
         if(!scene)return;
         scene.classList.add('sliding');
         scene.classList.remove('slide-right','slide-left','slide-down','slide-up');
-        void scene.offsetWidth; scene.classList.add(sc);
+        void scene.offsetWidth;scene.classList.add(sc);
       });
       setTimeout(()=>{
-        document.querySelectorAll('.piece-scene.sliding').forEach(s=>{
-          s.classList.remove('sliding','slide-right','slide-left','slide-down','slide-up');
-        });
+        document.querySelectorAll('.piece-scene.sliding').forEach(s=>s.classList.remove('sliding','slide-right','slide-left','slide-down','slide-up'));
         render();
-        const flips=strToFlips(action.flips);
-        applyFlips(flips,action.color,()=>{
-          board=flatToBoard(data.board);
-          currentTurn=data.turn;
-          gameOver=data.over;
-          animating=false;
-          mySeq=inSeq;
-          render(); updateHeader();
-          if(gameOver) handleGameOver();
+        applyFlips(strToFlips(action.flips),action.color,()=>{
+          board=flatToBoard(data.board);currentTurn=data.turn;gameOver=data.over;
+          animating=false;mySeq=inSeq;render();updateHeader();
+          if(gameOver)handleGameOver();
         });
       },400);
     }
   });
 }
 
-// ── Cell sizing ────────────────────────────────────────────────────────────
+// ── Cell sizing ──────────────────────────────────────────────────────────────
 function calcCellSize(){
   const maxW=Math.min(window.innerWidth-24,480);
-  EDGE=Math.floor(maxW/10);
-  CELL=Math.floor((maxW-EDGE*2)/8);
+  EDGE=Math.floor(maxW/10);CELL=Math.floor((maxW-EDGE*2)/8);
   document.documentElement.style.setProperty('--cell',CELL+'px');
   document.documentElement.style.setProperty('--edge',EDGE+'px');
   document.querySelector('.board').style.gridTemplateColumns=`repeat(8,${CELL}px)`;
@@ -517,13 +531,11 @@ function calcCellSize(){
   document.getElementById('board-outer').style.gridTemplateRows=`${EDGE}px ${CELL*8}px ${EDGE}px`;
 }
 
-// ── Game logic ─────────────────────────────────────────────────────────────
+// ── Game logic ───────────────────────────────────────────────────────────────
 function getContiguousBlock(axis,idx2){
   let r,c,dr,dc;
-  if(axis==='left'){r=idx2;c=0;dr=0;dc=1;}
-  else if(axis==='right'){r=idx2;c=7;dr=0;dc=-1;}
-  else if(axis==='top'){r=0;c=idx2;dr=1;dc=0;}
-  else{r=7;c=idx2;dr=-1;dc=0;}
+  if(axis==='left'){r=idx2;c=0;dr=0;dc=1;}else if(axis==='right'){r=idx2;c=7;dr=0;dc=-1;}
+  else if(axis==='top'){r=0;c=idx2;dr=1;dc=0;}else{r=7;c=idx2;dr=-1;dc=0;}
   const block=[];let nr=r,nc=c;
   while(nr>=0&&nr<8&&nc>=0&&nc<8&&board[nr][nc]!==null){block.push([nr,nc]);nr+=dr;nc+=dc;}
   return block;
@@ -569,10 +581,7 @@ function getFlipsFrom(r,c,color){
   }
   return flips;
 }
-function hasAnyNeighbor(r,c){
-  for(const[dr,dc]of DIRS8){const nr=r+dr,nc=c+dc;if(nr>=0&&nr<8&&nc>=0&&nc<8&&board[nr][nc])return true;}
-  return false;
-}
+function hasAnyNeighbor(r,c){for(const[dr,dc]of DIRS8){const nr=r+dr,nc=c+dc;if(nr>=0&&nr<8&&nc>=0&&nc<8&&board[nr][nc])return true;}return false;}
 function isValidBoard(r,c,color){return!board[r][c]&&hasAnyNeighbor(r,c)&&getFlipsFrom(r,c,color).length>0;}
 function validBoardCells(color){const v=[];for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(isValidBoard(r,c,color))v.push([r,c]);return v;}
 function validEdgeCells(color){
@@ -589,7 +598,7 @@ function getCounts(){let bc=0,wc=0;for(let r=0;r<8;r++)for(let c=0;c<8;c++){if(b
 function isMyTurn(){return currentTurn===myColor;}
 function slideAnimClass(axis){if(axis==='left')return'slide-right';if(axis==='right')return'slide-left';if(axis==='top')return'slide-down';return'slide-up';}
 
-// ── End turn ───────────────────────────────────────────────────────────────
+// ── End turn ─────────────────────────────────────────────────────────────────
 function endTurn(action){
   const bm=validBoardCells('black').length+validEdgeCells('black').length;
   const wm=validBoardCells('white').length+validEdgeCells('white').length;
@@ -597,136 +606,85 @@ function endTurn(action){
   let over=false,nextTurn=next;
   if(bm===0&&wm===0){over=true;nextTurn=currentTurn;}
   else if((next==='black'&&bm===0)||(next==='white'&&wm===0)){nextTurn=currentTurn;}
-  gameOver=over;
-  currentTurn=nextTurn;
-  animating=false;
+  gameOver=over;currentTurn=nextTurn;animating=false;
   mySeq=mySeq+1;
-  update(ref(db,`games/${gameCode}`),{
-    board:boardToFlat(board),turn:nextTurn,over:over,seq:mySeq,action:action
-  });
-  render(); updateHeader();
-  if(over) handleGameOver();
+  update(ref(db,`games/${gameCode}`),{board:boardToFlat(board),turn:nextTurn,over:over,seq:mySeq,action:action});
+  render();updateHeader();
+  if(over)handleGameOver();
 }
 
-// ── Game over ───────────────────────────────────────────────────────────────
+// ── Game over ─────────────────────────────────────────────────────────────────
 function handleGameOver(){
   const{bc,wc}=getCounts();
-  let winner=null;
-  if(bc===wc) winner='tie';
-  else if(bc>wc) winner='black';
-  else winner='white';
-
-  // Update record
-  if(winner==='tie') record.ties++;
-  else if(winner===myColor) record.wins++;
-  else record.losses++;
+  let winner=bc===wc?'tie':bc>wc?'black':'white';
+  if(winner==='tie')record.ties++;else if(winner===myColor)record.wins++;else record.losses++;
   updateRecord();
-
-  // Confetti if we won
-  if(winner===myColor) startConfetti();
-
-  // Show popup
+  if(winner===myColor)startConfetti();
   document.getElementById('popup-overlay').classList.add('show');
   const piece=document.getElementById('popup-piece');
   const title=document.getElementById('popup-title');
-  const score=document.getElementById('popup-score');
-  const rec=document.getElementById('popup-record');
-  if(winner==='tie'){
-    piece.className='popup-piece tie';
-    title.textContent="It's a tie!";
-  } else if(winner===myColor){
-    piece.className='popup-piece '+myColor;
-    title.textContent='You win! 🎉';
-  } else {
-    piece.className='popup-piece '+winner;
-    title.textContent='You lose.';
-  }
-  score.textContent=`${bc} — ${wc}`;
-  rec.textContent=`Session: ${record.wins}W ${record.losses}L ${record.ties}T`;
+  if(winner==='tie'){piece.className='popup-piece tie';title.textContent="It's a tie!";}
+  else if(winner===myColor){piece.className='popup-piece '+myColor;title.textContent='You win! 🎉';}
+  else{piece.className='popup-piece '+winner;title.textContent='You lose.';}
+  document.getElementById('popup-score').textContent=`${bc} — ${wc}`;
+  document.getElementById('popup-record').textContent=`Session: ${record.wins}W ${record.losses}L ${record.ties}T`;
   document.getElementById('replay-btn').disabled=false;
   document.getElementById('replay-status').textContent='';
-  // Clear any stale rematch state
+  // Sync popup hints toggle to current state
+  document.getElementById('popup-hints-toggle').checked=myHints;
+  // Push our hints pref and clear any stale rematch
   update(ref(db,`games/${gameCode}`),{rematch:null});
+  pushHints();
 }
 
-// ── Rematch ────────────────────────────────────────────────────────────────
+// ── Rematch ───────────────────────────────────────────────────────────────────
 window.requestReplay=function(){
   document.getElementById('replay-btn').disabled=true;
-  const rm={};
-  rm[myColor]='ready';
-  update(ref(db,`games/${gameCode}`),{rematch:rm});
+  const rm={};rm[myColor]='ready';
+  // Merge into existing rematch object
+  update(ref(db,`games/${gameCode}/rematch`),rm);
   updateRematchUI(true,false);
 };
-
 function updateRematchUI(myReady,oppReady){
   const btn=document.getElementById('replay-btn');
   const status=document.getElementById('replay-status');
-  if(myReady&&oppReady){
-    status.textContent='Starting...';
-  } else if(myReady&&!oppReady){
-    btn.disabled=true;
-    status.textContent='Waiting for opponent...';
-  } else if(!myReady&&oppReady){
-    btn.disabled=false;
-    status.textContent='Opponent wants a rematch!';
-  } else {
-    btn.disabled=false;
-    status.textContent='';
-  }
+  if(myReady&&oppReady){status.textContent='Starting...';}
+  else if(myReady&&!oppReady){btn.disabled=true;status.textContent='Waiting for opponent...';}
+  else if(!myReady&&oppReady){btn.disabled=false;status.textContent='Opponent wants a rematch!';}
+  else{btn.disabled=false;status.textContent='';}
 }
 
-// ── Place moves ────────────────────────────────────────────────────────────
+// ── Place moves ───────────────────────────────────────────────────────────────
 function placeBoard(r,c){
-  if(animating||gameOver||!isMyTurn()) return;
-  if(!isValidBoard(r,c,currentTurn)) return;
-  const boardBefore=boardToFlat(board);
-  const color=currentTurn;
-  board[r][c]=color;
-  const flips=getFlipsFrom(r,c,color);
-  animating=true; render();
-  applyFlips(flips,color,()=>{
-    endTurn({type:'board',r,c,color,flips:flipsToStr(flips),boardBefore});
-  });
+  if(animating||gameOver||!isMyTurn())return;
+  if(!isValidBoard(r,c,currentTurn))return;
+  const boardBefore=boardToFlat(board);const color=currentTurn;
+  board[r][c]=color;const flips=getFlipsFrom(r,c,color);
+  animating=true;render();
+  applyFlips(flips,color,()=>endTurn({type:'board',r,c,color,flips:flipsToStr(flips),boardBefore}));
 }
-
 function placeEdge(axis,idx2){
-  if(animating||gameOver||!isMyTurn()) return;
-  if(!isValidEdge(axis,idx2,currentTurn)) return;
-  const boardBefore=boardToFlat(board);
-  const blockLen=getContiguousBlock(axis,idx2).length;
-  const color=currentTurn;
-  animating=true;
-  doSlide(axis,idx2,color);
-  render(true);
-  fireSlipstreamBanner(axis,idx2,blockLen);
-  const sc=slideAnimClass(axis);
-  const movedCells=[];
+  if(animating||gameOver||!isMyTurn())return;
+  if(!isValidEdge(axis,idx2,currentTurn))return;
+  const boardBefore=boardToFlat(board);const blockLen=getContiguousBlock(axis,idx2).length;const color=currentTurn;
+  animating=true;doSlide(axis,idx2,color);render(true);fireSlipstreamBanner(axis,idx2,blockLen);
+  const sc=slideAnimClass(axis);const movedCells=[];
   if(axis==='left'||axis==='right'){for(let c2=0;c2<8;c2++)if(board[idx2][c2])movedCells.push([idx2,c2]);}
   else{for(let r2=0;r2<8;r2++)if(board[r2][idx2])movedCells.push([r2,idx2]);}
   movedCells.forEach(([r2,c2])=>{
     const cell=document.getElementById('board').children[r2*8+c2];
-    const scene=cell&&cell.querySelector('.piece-scene');
-    if(!scene)return;
-    scene.classList.add('sliding');
-    scene.classList.remove('slide-right','slide-left','slide-down','slide-up');
-    void scene.offsetWidth; scene.classList.add(sc);
+    const scene=cell&&cell.querySelector('.piece-scene');if(!scene)return;
+    scene.classList.add('sliding');scene.classList.remove('slide-right','slide-left','slide-down','slide-up');
+    void scene.offsetWidth;scene.classList.add(sc);
   });
   setTimeout(()=>{
-    document.querySelectorAll('.piece-scene.sliding').forEach(s=>{
-      s.classList.remove('sliding','slide-right','slide-left','slide-down','slide-up');
-    });
-    const[lr,lc]=landingPos(axis,idx2);
-    const postFlips=getFlipsFrom(lr,lc,color);
-    render();
-    applyFlips(postFlips,color,()=>{
-      endTurn({type:'slipstream',axis,idx2,blockLen,color,flips:flipsToStr(postFlips),boardBefore});
-    });
+    document.querySelectorAll('.piece-scene.sliding').forEach(s=>s.classList.remove('sliding','slide-right','slide-left','slide-down','slide-up'));
+    const[lr,lc]=landingPos(axis,idx2);const postFlips=getFlipsFrom(lr,lc,color);render();
+    applyFlips(postFlips,color,()=>endTurn({type:'slipstream',axis,idx2,blockLen,color,flips:flipsToStr(postFlips),boardBefore}));
   },400);
 }
-
 function applyFlips(flips,color,onDone){
-  if(!flips.length){onDone();return;}
-  let done=0;
+  if(!flips.length){onDone();return;}let done=0;
   flips.forEach(([fr,fc],i2)=>{
     setTimeout(()=>{
       board[fr][fc]=color;
@@ -735,67 +693,42 @@ function applyFlips(flips,color,onDone){
       if(!scene){done++;if(done===flips.length)onDone();return;}
       const ac=color==='white'?'flip-to-white':'flip-to-black';
       scene.classList.remove('show-black','show-white','flip-to-white','flip-to-black');
-      void scene.offsetWidth; scene.classList.add(ac);
-      scene.addEventListener('animationend',()=>{
-        scene.classList.remove(ac); scene.classList.add('show-'+color);
-        done++; if(done===flips.length)onDone();
-      },{once:true});
+      void scene.offsetWidth;scene.classList.add(ac);
+      scene.addEventListener('animationend',()=>{scene.classList.remove(ac);scene.classList.add('show-'+color);done++;if(done===flips.length)onDone();},{once:true});
     },i2*80);
   });
 }
 
-// ── Banner ─────────────────────────────────────────────────────────────────
+// ── Banner ────────────────────────────────────────────────────────────────────
 function axisToDirClass(axis){if(axis==='left')return'dir-right';if(axis==='right')return'dir-left';if(axis==='top')return'dir-down';return'dir-up';}
 function buildSpeedLines(isHoriz,W,H){
-  const svg=document.getElementById('speed-svg');
-  svg.innerHTML=''; svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const svg=document.getElementById('speed-svg');svg.innerHTML='';svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
   const NS='http://www.w3.org/2000/svg';
-  const delays=[0,.04,.08,.02,.06,.1,.03,.07,.01,.05];
-  const opacities=[.55,.35,.65,.45,.30,.60,.40,.50,.28,.42];
-  const widths=[2.5,1.2,3,1.8,1,2,1.5,2.8,1,1.6];
+  const delays=[0,.04,.08,.02,.06,.1,.03,.07,.01,.05];const opacities=[.55,.35,.65,.45,.30,.60,.40,.50,.28,.42];const widths=[2.5,1.2,3,1.8,1,2,1.5,2.8,1,1.6];
   for(let i=0;i<10;i++){
-    const line=document.createElementNS(NS,'line');
-    const len=(isHoriz?W:H)*(.4+Math.random()*.5);
-    const off=(isHoriz?W:H)*Math.random()*.3;
-    const cross=((isHoriz?H:W)/11)*(i+1);
+    const line=document.createElementNS(NS,'line');const len=(isHoriz?W:H)*(.4+Math.random()*.5);const off=(isHoriz?W:H)*Math.random()*.3;const cross=((isHoriz?H:W)/11)*(i+1);
     if(isHoriz){line.setAttribute('x1',off);line.setAttribute('y1',cross);line.setAttribute('x2',off+len);line.setAttribute('y2',cross);}
     else{line.setAttribute('x1',cross);line.setAttribute('y1',off);line.setAttribute('x2',cross);line.setAttribute('y2',off+len);}
-    line.setAttribute('stroke',`rgba(255,255,255,${opacities[i]})`);
-    line.setAttribute('stroke-width',widths[i]);
-    line.setAttribute('stroke-dasharray',len);
-    line.setAttribute('stroke-dashoffset',len+50);
-    line.style.animationDelay=delays[i]+'s';
-    line.classList.add('sline');
-    svg.appendChild(line);
+    line.setAttribute('stroke',`rgba(255,255,255,${opacities[i]})`);line.setAttribute('stroke-width',widths[i]);line.setAttribute('stroke-dasharray',len);line.setAttribute('stroke-dashoffset',len+50);line.style.animationDelay=delays[i]+'s';line.classList.add('sline');svg.appendChild(line);
   }
 }
 function fireSlipstreamBanner(axis,idx2,blockLen){
-  const banner=document.getElementById('slipstream-banner');
-  const textEl=document.getElementById('slipstream-text');
-  const isHoriz=axis==='left'||axis==='right';
-  let left,top,width,height,fontSize;
+  const banner=document.getElementById('slipstream-banner');const textEl=document.getElementById('slipstream-text');
+  const isHoriz=axis==='left'||axis==='right';let left,top,width,height,fontSize;
   if(isHoriz){top=EDGE+idx2*CELL;height=CELL;width=(blockLen+1)*CELL;left=axis==='left'?EDGE:EDGE+(8-blockLen-1)*CELL;fontSize=Math.round(height*.58);}
   else{left=EDGE+idx2*CELL;width=CELL;height=(blockLen+1)*CELL;top=axis==='top'?EDGE:EDGE+(8-blockLen-1)*CELL;fontSize=Math.round(width*.58);}
-  banner.style.left=left+'px'; banner.style.top=top+'px';
-  banner.style.width=width+'px'; banner.style.height=height+'px';
-  textEl.style.fontSize=fontSize+'px';
+  banner.style.left=left+'px';banner.style.top=top+'px';banner.style.width=width+'px';banner.style.height=height+'px';textEl.style.fontSize=fontSize+'px';
   buildSpeedLines(isHoriz,width,height);
-  banner.classList.remove('dir-right','dir-left','dir-down','dir-up','animate');
-  banner.classList.add(axisToDirClass(axis));
-  void banner.offsetWidth;
-  banner.classList.add('animate');
+  banner.classList.remove('dir-right','dir-left','dir-down','dir-up','animate');banner.classList.add(axisToDirClass(axis));
+  void banner.offsetWidth;banner.classList.add('animate');
   banner.addEventListener('animationend',()=>banner.classList.remove('animate'),{once:true});
 }
 
-// ── UI ─────────────────────────────────────────────────────────────────────
-function updateRecord(){
-  document.getElementById('record-bar').textContent=
-    `${record.wins}W — ${record.losses}L — ${record.ties}T`;
-}
+// ── UI ────────────────────────────────────────────────────────────────────────
+function updateRecord(){document.getElementById('record-bar').textContent=`${record.wins}W — ${record.losses}L — ${record.ties}T`;}
 function updateHeader(){
   const{bc,wc}=getCounts();
-  document.getElementById('score-black').textContent=bc;
-  document.getElementById('score-white').textContent=wc;
+  document.getElementById('score-black').textContent=bc;document.getElementById('score-white').textContent=wc;
   document.getElementById('chip-black').classList.toggle('active-turn',currentTurn==='black');
   document.getElementById('chip-white').classList.toggle('active-turn',currentTurn==='white');
   const sb=document.getElementById('status-bar');
@@ -805,54 +738,65 @@ function updateHeader(){
   else{sb.innerHTML='<span class="pulse-dot"></span> Waiting...';sb.className='status-bar their-turn';}
 }
 function makePiece(color){
-  const s=Math.round(CELL*.77);
-  const scene=document.createElement('div');
-  scene.className='piece-scene show-'+color;
-  scene.style.cssText=`width:${s}px;height:${s}px;`;
+  const s=Math.round(CELL*.77);const scene=document.createElement('div');
+  scene.className='piece-scene show-'+color;scene.style.cssText=`width:${s}px;height:${s}px;`;
   const front=document.createElement('div');front.className='face face-black';front.style.cssText=`width:${s}px;height:${s}px;`;
   const back=document.createElement('div');back.className='face face-white';back.style.cssText=`width:${s}px;height:${s}px;`;
-  scene.appendChild(front);scene.appendChild(back);
-  return scene;
+  scene.appendChild(front);scene.appendChild(back);return scene;
 }
 function render(suppressValid){
   const myTurn=isMyTurn();
-  const vBoard=(animating||suppressValid||gameOver||!myTurn)?[]:validBoardCells(currentTurn);
-  const vEdge=(animating||suppressValid||gameOver||!myTurn)?[]:validEdgeCells(currentTurn);
+  // hintsOn = both players want hints. If suppressValid or animating, never show.
+  const showHints=hintsOn&&!animating&&!suppressValid&&!gameOver&&myTurn;
+  const vBoard=showHints?validBoardCells(currentTurn):[];
+  const vEdge=showHints?validEdgeCells(currentTurn):[];
+  // Still need clickable cells even without hints dots
+  const clickBoard=!animating&&!suppressValid&&!gameOver&&myTurn?validBoardCells(currentTurn):[];
+  const clickEdge=!animating&&!suppressValid&&!gameOver&&myTurn?validEdgeCells(currentTurn):[];
   const vBoardSet=new Set(vBoard.map(([r,c])=>r*8+c));
+  const clickBoardSet=new Set(clickBoard.map(([r,c])=>r*8+c));
   const vLeft=new Set(vEdge.filter(e=>e.axis==='left').map(e=>e.idx2));
   const vRight=new Set(vEdge.filter(e=>e.axis==='right').map(e=>e.idx2));
   const vTop=new Set(vEdge.filter(e=>e.axis==='top').map(e=>e.idx2));
   const vBottom=new Set(vEdge.filter(e=>e.axis==='bottom').map(e=>e.idx2));
+  const clickLeft=new Set(clickEdge.filter(e=>e.axis==='left').map(e=>e.idx2));
+  const clickRight=new Set(clickEdge.filter(e=>e.axis==='right').map(e=>e.idx2));
+  const clickTop=new Set(clickEdge.filter(e=>e.axis==='top').map(e=>e.idx2));
+  const clickBottom=new Set(clickEdge.filter(e=>e.axis==='bottom').map(e=>e.idx2));
+
   const boardEl=document.getElementById('board');boardEl.innerHTML='';
   for(let r=0;r<8;r++)for(let c=0;c<8;c++){
     const v=board[r][c];const isLight=(r+c)%2===0;
-    const cell=document.createElement('div');
-    cell.className='cell';cell.style.width=CELL+'px';cell.style.height=CELL+'px';
+    const cell=document.createElement('div');cell.className='cell';cell.style.width=CELL+'px';cell.style.height=CELL+'px';
+    const flat=r*8+c;
     if(v){
       cell.classList.add('has-piece',isLight?'light':'dark');
-      if(animating)cell.classList.add('locked');
-      else cell.onclick=()=>placeBoard(r,c);
+      if(animating)cell.classList.add('locked');else cell.onclick=()=>placeBoard(r,c);
       cell.appendChild(makePiece(v));
-    } else if(vBoardSet.has(r*8+c)){
-      cell.classList.add(isLight?'valid-light':'valid-dark');
-      cell.onclick=()=>placeBoard(r,c);
+    } else if(vBoardSet.has(flat)){
+      // Hints on — show dot
+      cell.classList.add(isLight?'valid-light':'valid-dark');cell.onclick=()=>placeBoard(r,c);
+    } else if(clickBoardSet.has(flat)){
+      // Hints off — still clickable but no dot (just plain square)
+      cell.classList.add(isLight?'light':'dark');cell.onclick=()=>placeBoard(r,c);cell.style.cursor='pointer';
     } else{cell.classList.add(isLight?'light':'dark');}
     boardEl.appendChild(cell);
   }
-  const renderEdge=(id,validSet,axis)=>{
+  const renderEdge=(id,validSet,clickSet,axis)=>{
     const el=document.getElementById(id);el.innerHTML='';
     const isRow=axis==='left'||axis==='right';
     for(let i=0;i<8;i++){
       const cell=document.createElement('div');cell.className='edge-cell';
       cell.style.width=(isRow?EDGE:CELL)+'px';cell.style.height=(isRow?CELL:EDGE)+'px';
       if(validSet.has(i)){cell.classList.add('valid-edge');cell.onclick=()=>placeEdge(axis,i);}
+      else if(clickSet.has(i)){cell.style.cursor='pointer';cell.onclick=()=>placeEdge(axis,i);}
       el.appendChild(cell);
     }
   };
-  renderEdge('edge-top',vTop,'top');
-  renderEdge('edge-bottom',vBottom,'bottom');
-  renderEdge('edge-left',vLeft,'left');
-  renderEdge('edge-right',vRight,'right');
+  renderEdge('edge-top',vTop,clickTop,'top');
+  renderEdge('edge-bottom',vBottom,clickBottom,'bottom');
+  renderEdge('edge-left',vLeft,clickLeft,'left');
+  renderEdge('edge-right',vRight,clickRight,'right');
   updateHeader();
 }
 </script>
