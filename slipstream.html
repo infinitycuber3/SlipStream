@@ -142,6 +142,7 @@
   .popup-piece.white{background:#e8e8e8;border:2px solid #bbb;}
   .popup-piece.tie{background:linear-gradient(135deg,#2a2a2a 50%,#e8e8e8 50%);border:2px solid #888;}
   .popup-score{font-size:14px;color:#888;margin:0;text-align:center;}
+  .popup-subtitle{font-size:13px;color:#d4a843;margin:-4px 0 0 0;text-align:center;font-weight:500;min-height:16px;}
   .popup-record{font-size:13px;color:#666;text-align:center;}
   .popup-hints-row{display:flex;align-items:center;justify-content:space-between;width:100%;font-size:13px;color:#aaa;padding:2px 0;}
   .replay-btn{width:100%;padding:12px;border-radius:10px;border:none;background:#fff;color:#1a1a1a;font-size:15px;font-weight:600;cursor:pointer;}
@@ -270,7 +271,19 @@
     <button class="pause-copy-btn" onclick="pauseCopyCode()">Copy code</button>
     <div class="modal-divider"></div>
     <button class="modal-btn primary" onclick="closePause()">Resume</button>
+    <button class="pause-leave-btn" id="resign-flag-btn" onclick="confirmResign()">🏳️ Resign</button>
     <button class="pause-leave-btn" onclick="leaveGame()">Leave game</button>
+  </div>
+</div>
+
+<!-- ── RESIGN CONFIRM ── -->
+<div class="overlay" id="resign-confirm-overlay">
+  <div class="modal">
+    <div class="modal-title">Resign this game?</div>
+    <div class="modal-body">Your opponent will be declared the winner. This counts as a loss in your session record.</div>
+    <div class="modal-divider"></div>
+    <button class="pause-leave-btn" onclick="doResign()">Yes, resign</button>
+    <button class="modal-btn secondary" onclick="cancelResign()">Cancel</button>
   </div>
 </div>
 
@@ -279,6 +292,7 @@
   <div class="modal">
     <div class="popup-piece" id="popup-piece"></div>
     <p class="modal-title" id="popup-title"></p>
+    <p class="popup-subtitle" id="popup-subtitle"></p>
     <p class="popup-score" id="popup-score"></p>
     <p class="popup-record" id="popup-record"></p>
     <div class="modal-divider"></div>
@@ -520,6 +534,33 @@ window.leaveGame=function(){
   record={wins:0,losses:0,ties:0};
 };
 
+// ── Resign ────────────────────────────────────────────────────────────────────
+window.confirmResign=function(){
+  if(gameOver)return;
+  document.getElementById('resign-confirm-overlay').classList.add('show');
+};
+window.cancelResign=function(){
+  document.getElementById('resign-confirm-overlay').classList.remove('show');
+};
+window.doResign=function(){
+  document.getElementById('resign-confirm-overlay').classList.remove('show');
+  closePause();
+  if(gameOver)return;
+  // Force the board so the opponent wins outright, then end the game
+  gameOver=true;
+  animating=false;
+  mySeq=mySeq+1;
+  const resignAction={type:'resign',by:myColor};
+  update(ref(db,`games/${gameCode}`),{
+    over:true,
+    seq:mySeq,
+    action:resignAction,
+    resignedBy:myColor
+  });
+  render();updateHeader();
+  handleGameOver(true);
+};
+
 // ── Game start ────────────────────────────────────────────────────────────────
 function startGame(){
   document.getElementById('lobby').style.display='none';
@@ -567,6 +608,14 @@ function startGame(){
     if(animating)return;
     const action=data.action;
     if(!action)return;
+
+    if(action.type==='resign'){
+      // Opponent resigned
+      board=flatToBoard(data.board);currentTurn=data.turn;gameOver=true;
+      animating=false;mySeq=inSeq;render();updateHeader();
+      handleGameOver(false,action.by);
+      return;
+    }
 
     animating=true;updateHeader();
 
@@ -704,24 +753,55 @@ function endTurn(action){
 }
 
 // ── Game over ─────────────────────────────────────────────────────────────────
-function handleGameOver(){
+function handleGameOver(isMine,resignedBy){
   const{bc,wc}=getCounts();
-  let winner=bc===wc?'tie':bc>wc?'black':'white';
+  let winner;
+  if(resignedBy){
+    winner=resignedBy==='black'?'white':'black';
+  } else {
+    winner=bc===wc?'tie':bc>wc?'black':'white';
+  }
+  const loserScore=winner==='black'?wc:bc;
+  const isAnnihilation=!resignedBy&&winner!=='tie'&&loserScore===0;
+
   if(winner==='tie')record.ties++;else if(winner===myColor)record.wins++;else record.losses++;
   updateRecord();
   if(winner===myColor)startConfetti();
   document.getElementById('popup-overlay').classList.add('show');
   const piece=document.getElementById('popup-piece');
   const title=document.getElementById('popup-title');
-  if(winner==='tie'){piece.className='popup-piece tie';title.textContent="It's a tie!";}
-  else if(winner===myColor){piece.className='popup-piece '+myColor;title.textContent='You win! 🎉';}
-  else{piece.className='popup-piece '+winner;title.textContent='You lose.';}
-  document.getElementById('popup-score').textContent=`${bc} — ${wc}`;
+  const sub=document.getElementById('popup-subtitle');
+
+  if(resignedBy){
+    if(resignedBy===myColor){
+      piece.className='popup-piece '+winner;
+      title.textContent='You resigned.';
+      sub.textContent='Game ended by resignation.';
+    } else {
+      piece.className='popup-piece '+myColor;
+      title.textContent='You win! 🎉';
+      sub.textContent='Opponent resigned.';
+    }
+  } else if(winner==='tie'){
+    piece.className='popup-piece tie';
+    title.textContent="It's a tie!";
+    sub.textContent='';
+  } else if(winner===myColor){
+    piece.className='popup-piece '+myColor;
+    title.textContent='You win! 🎉';
+    sub.textContent=isAnnihilation?'Total annihilation 💀':'';
+  } else {
+    piece.className='popup-piece '+winner;
+    title.textContent='You lose.';
+    sub.textContent=isAnnihilation?'Total annihilation 💀':'';
+  }
+
+  document.getElementById('popup-score').textContent=resignedBy?`${bc} — ${wc} (resigned)`:`${bc} — ${wc}`;
   document.getElementById('popup-record').textContent=`Session: ${record.wins}W ${record.losses}L${record.ties>0?' '+record.ties+'T':''}`;
   document.getElementById('replay-btn').disabled=false;
   document.getElementById('replay-status').textContent='';
   document.getElementById('popup-hints-toggle').checked=myHints;
-  update(ref(db,`games/${gameCode}`),{rematch:null});
+  if(!resignedBy||resignedBy===myColor) update(ref(db,`games/${gameCode}`),{rematch:null});
   pushHints();
 }
 
