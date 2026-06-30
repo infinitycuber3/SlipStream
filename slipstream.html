@@ -212,7 +212,7 @@
     <button onclick="joinGame()">Join</button>
   </div>
   <div class="lobby-err" id="lobby-err"></div>
-  <div class="version-tag">v1.1.1</div>
+  <div class="version-tag">v1.1.2</div>
 </div>
 
 <!-- ── WAITING ── -->
@@ -758,13 +758,19 @@ function startGame(){
       });
     } else if(action.type==='slipstream'){
       board=flatToBoard(action.boardBefore);render(true);
+      const block=getContiguousBlock(action.axis,action.idx2);
+      const shiftedPositions=block.map(([r,c])=>{
+        if(action.axis==='left')return[r,c+1];
+        if(action.axis==='right')return[r,c-1];
+        if(action.axis==='top')return[r+1,c];
+        return[r-1,c];
+      });
+      const[er,ec]=landingPos(action.axis,action.idx2);
+      const movedCells=[[er,ec],...shiftedPositions];
+
       doSlide(action.axis,action.idx2,action.color);render(true);
       fireSlipstreamBanner(action.axis,action.idx2,action.blockLen);
       const sc=slideAnimClass(action.axis);
-      const movedCells=[];
-      const ax=action.axis;
-      if(ax==='left'||ax==='right'){for(let c2=0;c2<8;c2++)if(board[action.idx2][c2])movedCells.push([action.idx2,c2]);}
-      else{for(let r2=0;r2<8;r2++)if(board[r2][action.idx2])movedCells.push([r2,action.idx2]);}
       movedCells.forEach(([r2,c2])=>{
         const cell=document.getElementById('board').children[r2*8+c2];
         const scene=cell&&cell.querySelector('.piece-scene');if(!scene)return;
@@ -986,11 +992,21 @@ function placeBoard(r,c){
 function placeEdge(axis,idx2){
   if(animating||gameOver||!isMyTurn())return;
   if(!isValidEdge(axis,idx2,currentTurn))return;
-  const boardBefore=boardToFlat(board);const blockLen=getContiguousBlock(axis,idx2).length;const color=currentTurn;
+  const boardBefore=boardToFlat(board);
+  const block=getContiguousBlock(axis,idx2);
+  const blockLen=block.length;const color=currentTurn;
+  // Compute the post-slide positions of exactly the cells that moved, before mutating board
+  const shiftedPositions=block.map(([r,c])=>{
+    if(axis==='left')return[r,c+1];
+    if(axis==='right')return[r,c-1];
+    if(axis==='top')return[r+1,c];
+    return[r-1,c];
+  });
+  const [er,ec]=landingPos(axis,idx2);
+  const movedCells=[[er,ec],...shiftedPositions];
+
   animating=true;doSlide(axis,idx2,color);render(true);fireSlipstreamBanner(axis,idx2,blockLen);
-  const sc=slideAnimClass(axis);const movedCells=[];
-  if(axis==='left'||axis==='right'){for(let c2=0;c2<8;c2++)if(board[idx2][c2])movedCells.push([idx2,c2]);}
-  else{for(let r2=0;r2<8;r2++)if(board[r2][idx2])movedCells.push([r2,idx2]);}
+  const sc=slideAnimClass(axis);
   movedCells.forEach(([r2,c2])=>{
     const cell=document.getElementById('board').children[r2*8+c2];
     const scene=cell&&cell.querySelector('.piece-scene');if(!scene)return;
@@ -999,7 +1015,7 @@ function placeEdge(axis,idx2){
   });
   setTimeout(()=>{
     document.querySelectorAll('.piece-scene.sliding').forEach(s=>s.classList.remove('sliding','slide-right','slide-left','slide-down','slide-up'));
-    const[lr,lc]=landingPos(axis,idx2);const postFlips=getFlipsFrom(lr,lc,color);render();
+    const postFlips=getFlipsFrom(er,ec,color);render();
     applyFlips(postFlips,color,()=>endTurn({type:'slipstream',axis,idx2,blockLen,color,flips:flipsToStr(postFlips),boardBefore}));
   },400);
 }
