@@ -98,10 +98,18 @@
   .piece-scene.slide-left{animation:slideLeft .36s cubic-bezier(.34,1.56,.64,1) forwards;}
   .piece-scene.slide-down{animation:slideDown .36s cubic-bezier(.34,1.56,.64,1) forwards;}
   .piece-scene.slide-up{animation:slideUp .36s cubic-bezier(.34,1.56,.64,1) forwards;}
-  @keyframes slideRight{from{transform:translateX(calc(-1*var(--cell)));}to{transform:translateX(0);}}
-  @keyframes slideLeft{from{transform:translateX(var(--cell));}to{transform:translateX(0);}}
-  @keyframes slideDown{from{transform:translateY(calc(-1*var(--cell)));}to{transform:translateY(0);}}
-  @keyframes slideUp{from{transform:translateY(var(--cell));}to{transform:translateY(0);}}
+  .piece-scene.slide-right.show-white{animation-name:slideRightW;}
+  .piece-scene.slide-left.show-white{animation-name:slideLeftW;}
+  .piece-scene.slide-down.show-white{animation-name:slideDownW;}
+  .piece-scene.slide-up.show-white{animation-name:slideUpW;}
+  @keyframes slideRight{from{transform:translateX(calc(-1*var(--cell))) rotateY(0deg);}to{transform:translateX(0) rotateY(0deg);}}
+  @keyframes slideLeft{from{transform:translateX(var(--cell)) rotateY(0deg);}to{transform:translateX(0) rotateY(0deg);}}
+  @keyframes slideDown{from{transform:translateY(calc(-1*var(--cell))) rotateY(0deg);}to{transform:translateY(0) rotateY(0deg);}}
+  @keyframes slideUp{from{transform:translateY(var(--cell)) rotateY(0deg);}to{transform:translateY(0) rotateY(0deg);}}
+  @keyframes slideRightW{from{transform:translateX(calc(-1*var(--cell))) rotateY(180deg);}to{transform:translateX(0) rotateY(180deg);}}
+  @keyframes slideLeftW{from{transform:translateX(var(--cell)) rotateY(180deg);}to{transform:translateX(0) rotateY(180deg);}}
+  @keyframes slideDownW{from{transform:translateY(calc(-1*var(--cell))) rotateY(180deg);}to{transform:translateY(0) rotateY(180deg);}}
+  @keyframes slideUpW{from{transform:translateY(var(--cell)) rotateY(180deg);}to{transform:translateY(0) rotateY(180deg);}}
 
   /* ── Banner ── */
   .slipstream-banner{position:absolute;z-index:300;pointer-events:none;display:flex;align-items:center;justify-content:center;opacity:0;overflow:hidden;}
@@ -204,7 +212,7 @@
     <button onclick="joinGame()">Join</button>
   </div>
   <div class="lobby-err" id="lobby-err"></div>
-  <div class="version-tag">v1.1.0</div>
+  <div class="version-tag">v1.1.1</div>
 </div>
 
 <!-- ── WAITING ── -->
