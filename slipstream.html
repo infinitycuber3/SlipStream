@@ -162,6 +162,19 @@
   /* ── Confetti ── */
   #confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:199;}
 
+  /* ── CHUD debug panel ── */
+  #chud-panel{width:100%;max-width:520px;background:#1f2a1f;border:1px solid #3a5a3a;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;margin-top:4px;}
+  .chud-title{font-family:'Barlow Condensed',Impact,sans-serif;font-weight:800;font-style:italic;font-size:16px;letter-spacing:.04em;color:#9fdc9f;text-transform:uppercase;}
+  .chud-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .chud-label{font-size:12px;color:#8fae8f;}
+  .chud-btn{padding:7px 14px;border-radius:7px;border:1px solid #3a5a3a;background:#27392a;color:#cdeccd;font-size:13px;cursor:pointer;}
+  .chud-btn:hover{background:#324a36;}
+  .chud-presets{display:flex;flex-wrap:wrap;gap:6px;}
+  .chud-preset-btn{padding:6px 10px;border-radius:6px;border:1px solid #3a5a3a;background:#22311f;color:#bcd9bc;font-size:12px;cursor:pointer;}
+  .chud-preset-btn:hover{background:#2c3f29;}
+  .chud-reset{width:100%;border-color:#5a3a3a;background:#2f2222;color:#e0b0b0;}
+  .chud-reset:hover{background:#3a2828;}
+
   .status-bar{font-size:13px;color:#666;min-height:18px;display:flex;align-items:center;gap:6px;}
   .status-bar.your-turn{color:#a8d8a8;}.status-bar.their-turn{color:#888;}
   .pulse-dot{width:7px;height:7px;border-radius:50%;background:#888;display:inline-block;animation:pulse 1.2s ease-in-out infinite;}
@@ -191,7 +204,7 @@
     <button onclick="joinGame()">Join</button>
   </div>
   <div class="lobby-err" id="lobby-err"></div>
-  <div class="version-tag">v1.0.1</div>
+  <div class="version-tag">v1.1.0</div>
 </div>
 
 <!-- ── WAITING ── -->
@@ -211,14 +224,14 @@
 <!-- ── GAME ── -->
 <div id="game">
   <div class="game-header">
-    <div class="player-chip" id="chip-black">
+    <div class="player-chip" id="chip-black" onclick="chudClickChip('black')">
       <div class="dot black"></div>
       <span class="score" id="score-black">2</span>
       <span class="your-tag" id="tag-black"></span>
     </div>
     <div class="status-bar" id="status-bar">—</div>
     <div style="display:flex;align-items:center;gap:2px;">
-      <div class="player-chip" id="chip-white">
+      <div class="player-chip" id="chip-white" onclick="chudClickChip('white')">
         <div class="dot white"></div>
         <span class="score" id="score-white">2</span>
         <span class="your-tag" id="tag-white"></span>
@@ -247,6 +260,28 @@
     <div class="slipstream-banner" id="slipstream-banner">
       <svg id="speed-svg" xmlns="http://www.w3.org/2000/svg"></svg>
       <span id="slipstream-text">SLIPSTREAM</span>
+    </div>
+  </div>
+
+  <!-- CHUD debug panel -->
+  <div id="chud-panel" style="display:none;">
+    <div class="chud-title">🐸 CHUD DEBUG MODE</div>
+    <div class="chud-row">
+      <span class="chud-label">Active player</span>
+      <button class="chud-btn" id="chud-turn-toggle" onclick="chudToggleTurn()">Black</button>
+    </div>
+    <div class="chud-row">
+      <span class="chud-label">Presets</span>
+    </div>
+    <div class="chud-presets">
+      <button class="chud-preset-btn" onclick="chudLoadPreset('standard')">Standard start</button>
+      <button class="chud-preset-btn" onclick="chudLoadPreset('endgame')">Near-full board</button>
+      <button class="chud-preset-btn" onclick="chudLoadPreset('slipstreams')">Slipstream setups</button>
+      <button class="chud-preset-btn" onclick="chudLoadPreset('annihilation')">Near annihilation</button>
+      <button class="chud-preset-btn" onclick="chudLoadPreset('empty')">Empty board</button>
+    </div>
+    <div class="chud-row">
+      <button class="chud-btn chud-reset" onclick="chudResetGame()">Reset to standard</button>
     </div>
   </div>
 </div>
@@ -341,6 +376,8 @@ let myHints=true;
 let oppHints=true;
 // for join mismatch flow
 let pendingJoinCode=null;
+// CHUD local debug mode
+let isLocalMode=false;
 
 // ── Confetti ─────────────────────────────────────────────────────────────────
 const canvas=document.getElementById('confetti-canvas');
@@ -368,7 +405,7 @@ function strToFlips(s){if(!s||s==='')return[];return s.split(';').filter(Boolean
 function randCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ';return Array.from({length:4},()=>c[Math.floor(Math.random()*c.length)]).join('');}
 
 function pushHints(){
-  if(!gameCode)return;
+  if(!gameCode||isLocalMode)return;
   const obj={};obj[myColor]=myHints?'on':'off';
   update(ref(db,`games/${gameCode}/hints`),obj);
 }
@@ -431,6 +468,7 @@ window.createGame=async function(){
 
 window.joinGame=async function(){
   const code=document.getElementById('code-input').value.trim().toUpperCase();
+  if(code==='CHUD'){ startLocalChudGame(); return; }
   if(code.length!==4){setErr('Enter a 4-letter code');return;}
   const snap=await get(ref(db,`games/${code}`));
   if(!snap.exists()){setErr('Game not found');return;}
@@ -493,6 +531,84 @@ async function doJoin(code){
 }
 
 function setErr(msg){document.getElementById('lobby-err').textContent=msg;}
+
+// ── CHUD local debug mode ────────────────────────────────────────────────────
+function chudPresetBoard(name){
+  const b=Array.from({length:8},()=>Array(8).fill(null));
+  if(name==='standard'){
+    b[3][3]='white';b[3][4]='black';b[4][3]='black';b[4][4]='white';
+  } else if(name==='empty'){
+    // entirely empty board
+  } else if(name==='endgame'){
+    // mostly full board, a few gaps left
+    for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+      if((r===3&&c===3)||(r===3&&c===5)||(r===5&&c===2)||(r===6&&c===6)) continue;
+      b[r][c]=((r+c)%2===0)?'black':'white';
+    }
+    b[3][3]='white';b[3][4]='black';b[4][3]='black';b[4][4]='white';
+  } else if(name==='slipstreams'){
+    b[0][0]='black';b[0][1]='black';b[0][2]='white';
+    b[2][0]='white';b[2][1]='white';b[2][2]='black';
+    b[4][4]='white';b[4][5]='black';b[4][6]='black';b[4][7]='black';
+    b[0][5]='white';b[1][5]='black';b[2][5]='black';
+    b[0][6]='white';b[1][6]='black';b[2][6]='black';
+    b[5][2]='black';b[6][2]='white';b[7][2]='white';
+    b[5][7]='white';b[6][7]='black';b[7][7]='black';
+  } else if(name==='annihilation'){
+    // one lone white piece surrounded by black, easy to wipe out
+    for(let r=2;r<6;r++)for(let c=2;c<6;c++)b[r][c]='black';
+    b[3][3]='white';
+  }
+  return b;
+}
+
+window.startLocalChudGame=function(){
+  isLocalMode=true;
+  myColor='black';
+  gameCode='CHUD';
+  board=chudPresetBoard('standard');
+  currentTurn='black';gameOver=false;animating=false;
+  myHints=true;
+  document.getElementById('lobby').style.display='none';
+  document.getElementById('waiting').style.display='none';
+  document.getElementById('game').style.display='flex';
+  document.getElementById('tag-black').textContent='';
+  document.getElementById('tag-white').textContent='';
+  document.getElementById('record-bar').textContent='';
+  document.getElementById('hints-toast').classList.remove('show');
+  document.getElementById('chud-panel').style.display='flex';
+  calcCellSize();render();updateHeader();updateChudPanel();
+};
+
+window.chudClickChip=function(color){
+  if(!isLocalMode)return;
+  currentTurn=color;myColor=color;gameOver=false;
+  render();updateHeader();updateChudPanel();
+};
+
+window.chudToggleTurn=function(){
+  currentTurn=currentTurn==='black'?'white':'black';
+  myColor=currentTurn;
+  gameOver=false;
+  render();updateHeader();updateChudPanel();
+};
+
+window.chudLoadPreset=function(name){
+  board=chudPresetBoard(name);
+  currentTurn='black';myColor='black';gameOver=false;animating=false;
+  document.getElementById('popup-overlay').classList.remove('show');
+  render();updateHeader();updateChudPanel();
+};
+
+window.chudResetGame=function(){
+  chudLoadPreset('standard');
+};
+
+function updateChudPanel(){
+  const btn=document.getElementById('chud-turn-toggle');
+  if(btn)btn.textContent=currentTurn.charAt(0).toUpperCase()+currentTurn.slice(1);
+}
+
 window.copyCode=function(){
   navigator.clipboard.writeText(gameCode).catch(()=>{});
   document.querySelector('.copy-btn').textContent='Copied!';
@@ -509,7 +625,8 @@ window.cancelWaiting=function(){
 
 // ── Pause menu ────────────────────────────────────────────────────────────────
 window.openPause=function(){
-  document.getElementById('pause-code-display').textContent=gameCode||'—';
+  document.getElementById('pause-code-display').textContent=isLocalMode?'CHUD':(gameCode||'—');
+  document.getElementById('resign-flag-btn').style.display=isLocalMode?'none':'block';
   document.getElementById('pause-overlay').classList.add('show');
 };
 window.closePause=function(){document.getElementById('pause-overlay').classList.remove('show');};
@@ -521,7 +638,7 @@ window.pauseCopyCode=function(){
 window.leaveGame=function(){
   closePause();stopConfetti();
   // Free up the slot so someone else (or the same person) can rejoin
-  if(gameCode&&myColor){
+  if(!isLocalMode&&gameCode&&myColor){
     const slot={};slot[myColor]='waiting';
     update(ref(db,`games/${gameCode}`),slot).catch(()=>{});
   }
@@ -529,16 +646,18 @@ window.leaveGame=function(){
   document.getElementById('popup-overlay').classList.remove('show');
   document.getElementById('game').style.display='none';
   document.getElementById('hints-toast').classList.remove('show');
+  document.getElementById('chud-panel').style.display='none';
   document.getElementById('lobby').style.display='flex';
   document.getElementById('lobby-err').textContent='';
   gameCode=null;myColor=null;board=freshBoard();
   currentTurn='black';gameOver=false;animating=false;mySeq=0;
   record={wins:0,losses:0,ties:0};
+  isLocalMode=false;
 };
 
 // ── Resign ────────────────────────────────────────────────────────────────────
 window.confirmResign=function(){
-  if(gameOver)return;
+  if(gameOver||isLocalMode)return;
   document.getElementById('resign-confirm-overlay').classList.add('show');
 };
 window.cancelResign=function(){
@@ -736,7 +855,7 @@ function validEdgeCells(color){
   return v;
 }
 function getCounts(){let bc=0,wc=0;for(let r=0;r<8;r++)for(let c=0;c<8;c++){if(board[r][c]==='black')bc++;else if(board[r][c]==='white')wc++;}return{bc,wc};}
-function isMyTurn(){return currentTurn===myColor;}
+function isMyTurn(){return isLocalMode||currentTurn===myColor;}
 function slideAnimClass(axis){if(axis==='left')return'slide-right';if(axis==='right')return'slide-left';if(axis==='top')return'slide-down';return'slide-up';}
 
 // ── End turn ──────────────────────────────────────────────────────────────────
@@ -748,6 +867,11 @@ function endTurn(action){
   if(bm===0&&wm===0){over=true;nextTurn=currentTurn;}
   else if((next==='black'&&bm===0)||(next==='white'&&wm===0)){nextTurn=currentTurn;}
   gameOver=over;currentTurn=nextTurn;animating=false;
+  if(isLocalMode){
+    render();updateHeader();updateChudPanel();
+    if(over)handleGameOver();
+    return;
+  }
   mySeq=mySeq+1;
   update(ref(db,`games/${gameCode}`),{board:boardToFlat(board),turn:nextTurn,over:over,seq:mySeq,action:action});
   render();updateHeader();
@@ -765,6 +889,20 @@ function handleGameOver(isMine,resignedBy){
   }
   const loserScore=winner==='black'?wc:bc;
   const isAnnihilation=!resignedBy&&winner!=='tie'&&loserScore===0;
+
+  if(isLocalMode){
+    document.getElementById('popup-overlay').classList.add('show');
+    const piece=document.getElementById('popup-piece');
+    const title=document.getElementById('popup-title');
+    const sub=document.getElementById('popup-subtitle');
+    if(winner==='tie'){piece.className='popup-piece tie';title.textContent="It's a tie!";sub.textContent='';}
+    else{piece.className='popup-piece '+winner;title.textContent=(winner==='black'?'Black':'White')+' wins!';sub.textContent=isAnnihilation?'Total annihilation 💀':'';}
+    document.getElementById('popup-score').textContent=`${bc} — ${wc}`;
+    document.getElementById('popup-record').textContent='CHUD debug mode';
+    document.getElementById('replay-btn').disabled=false;
+    document.getElementById('replay-status').textContent='';
+    return;
+  }
 
   if(winner==='tie')record.ties++;else if(winner===myColor)record.wins++;else record.losses++;
   updateRecord();
@@ -809,6 +947,11 @@ function handleGameOver(isMine,resignedBy){
 
 // ── Rematch ───────────────────────────────────────────────────────────────────
 window.requestReplay=function(){
+  if(isLocalMode){
+    chudResetGame();
+    document.getElementById('popup-overlay').classList.remove('show');
+    return;
+  }
   document.getElementById('replay-btn').disabled=true;
   const rm={};rm[myColor]='ready';
   update(ref(db,`games/${gameCode}/rematch`),rm);
